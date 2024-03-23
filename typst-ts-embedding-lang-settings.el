@@ -773,7 +773,7 @@ Use this function as one notifier of `treesit-parser-notifiers'."
            ;; parsers created by `treesit-language-at-point-function' (
            ;; `typst-ts-mode--language-at-point'.)
            ;; i.e. parsers cannot be created by `treesit-range-settings'
-           (mapcar #'treesit-parser-language (treesit-parser-list))
+           (mapcar #'treesit-parser-language (typst-ts-utils-parser-list))
            ;; parsers created by `treesit-range-settings'
            (mapcar #'treesit-parser-language
                    (typst-ts-utils-local-parsers-on (point-min) (point-max))))))
@@ -789,7 +789,7 @@ Use this function as one notifier of `treesit-parser-notifiers'."
                   (typst-ts-els-merge-lang-settings lang)
                   ;; some feature like cmake-ts-mode will create a parser when
                   ;; the feature is required, so we need to clean thease parsers
-                  (mapc #'treesit-parser-delete (treesit-parser-list nil lang))
+                  (mapc #'treesit-parser-delete (typst-ts-utils-parser-list nil lang))
                   (message "Load %s language settings from configuration." lang))
               (error
                ;; if language not in setting or encounter error during loading,
@@ -801,7 +801,7 @@ Use this function as one notifier of `treesit-parser-notifiers'."
                        (typst-ts-els--add-treesit-range-rules lang)
                        ;; delete top level parsers, so range rules works (i.e. local parsers)
                        ;; so that highlighting will not exceed the desired range
-                       (mapc #'treesit-parser-delete (treesit-parser-list nil lang))
+                       (mapc #'treesit-parser-delete (typst-ts-utils-parser-list nil lang))
                        
                        ;; find and merge settings
                        (setq lang-ts-mode

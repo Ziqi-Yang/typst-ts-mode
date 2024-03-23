@@ -1143,7 +1143,7 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
                  (typst-ts-els-merge-settings config)
                ;; some feature like cmake-ts-mode will create a parser when
                ;; the feature is required, so we need to clean thease parsers
-               (mapc #'treesit-parser-delete (treesit-parser-list nil lang))
+               (mapc #'treesit-parser-delete (typst-ts-utils-parser-list nil lang))
                (add-to-list 'typst-ts-els--include-languages lang))))
 
   (typst-ts-mode-check-grammar-version))
