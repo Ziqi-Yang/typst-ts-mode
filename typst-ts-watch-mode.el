@@ -15,11 +15,18 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary: Minor mode for watching(hot compile) current typst file.
+;;; Commentary:
 
-;; 
+;; Minor mode for watching(hot compile) current typst file.
 
 ;;; Code:
+
+(require 'typst-ts-compile)
+
+(defgroup typst-ts-watch nil
+  "Typst TS Watch."
+  :prefix "typst-ts-watch"
+  :group 'typst-ts)
 
 (define-minor-mode typst-ts-watch-mode
   "Watch(hot compile) current typst file."
@@ -33,27 +40,32 @@
   "User defined compile options for `typst-ts-watch'.
 The compile options will be passed to the
 `<typst-executable> watch <current-file>' sub-command."
-  :type 'string)
+  :type 'string
+  :group 'typst-ts-watch)
 
 (defcustom typst-ts-watch-process-name "*Typst-Watch*"
   "Process name for `typst watch' sub-command."
-  :type 'string)
+  :type 'string
+  :group 'typst-ts-watch)
 
 (defcustom typst-ts-watch-process-buffer-name "*Typst-Watch*"
   "Process buffer name for `typst watch' sub-command."
-  :type 'string)
+  :type 'string
+  :group 'typst-ts-watch)
 
 (defcustom typst-ts-display-watch-process-bufer-automatically t
   "Whether the typst watch process buffer should be displayed automatically.
 This means the buffer will be displayed when error occurs, hide when error
 is eliminated."
-  :type 'boolean)
+  :type 'boolean
+  :group 'typst-ts-watch)
 
 (defcustom typst-ts-display-watch-process-buffer-parameters
   `(display-buffer-at-bottom
     (window-height . fit-window-to-buffer))
   "Display buffer parameters."
-  :type 'symbol)
+  :type 'symbol
+  :group 'typst-ts-watch)
 
 (defvar typst-ts-before-watch-hook nil
   "Hook runs before compile.")
@@ -116,7 +128,7 @@ PROC: process; OUTPUT: new output from PROC."
    (start-process-shell-command
     typst-ts-watch-process-name typst-ts-watch-process-buffer-name
     (format "%s watch %s %s"
-            typst-ts-mode-executable-location
+            typst-ts-compile-executable-location
             (file-name-nondirectory buffer-file-name)
             typst-ts-watch-options))
    'typst-ts--watch-process-filter)

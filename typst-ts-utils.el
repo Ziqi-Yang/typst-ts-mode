@@ -23,13 +23,15 @@
 
 (require 'treesit)
 
+(declare-function treesit-parser-list "treesit.c")
+
 (defun typst-ts-utils-parser-list (&optional buffer language)
   "An comptibility function for Emacs 29's `treesit-parser-list' function.
 BUFFER defaults to the current buffer.  If that buffer is an indirect
 buffer, its base buffer is used instead.  That is, indirect buffers
 use their base buffer's parsers.
 
-If LANGUAGE is non-nil, only return parsers for that language. "
+If LANGUAGE is non-nil, only return parsers for that language."
   (if (>= emacs-major-version 30)
       (funcall #'treesit-parser-list buffer language)
     (let ((parsers (treesit-parser-list buffer)))
@@ -43,7 +45,7 @@ If LANGUAGE is non-nil, only return parsers for that language. "
   "Return all the local parsers at POS.
 It's a copy of Emacs 30's `treesit-local-parsers-at' function.
 POS LANGUAGE WITH-HOST."
-  (if (>= emacs-major-version 30)
+  (if (fboundp 'treesit-local-parsers-at)
       (funcall #'treesit-local-parsers-at pos language with-host)
     (let ((res nil))
       (dolist (ov (overlays-at (or pos (point))))
@@ -60,7 +62,7 @@ POS LANGUAGE WITH-HOST."
   "Return all the local parsers between BEG END.
 It's a copy of Emacs 30's `treesit-local-parsers-on' function.
 BEG END LANGUAGE WITH-HOST."
-  (if (>= emacs-major-version 30)
+  (if (fboundp 'treesit-local-parsers-on)
       (funcall #'treesit-local-parsers-on beg end language with-host)
     (let ((res nil))
       (dolist (ov (overlays-in (or beg (point-min)) (or end (point-max))))
@@ -76,7 +78,7 @@ BEG END LANGUAGE WITH-HOST."
   "Get things from NODE by INSTRUCTIONS.
 It's a copy of Emacs 30's `treesit-node-get' function."
   (declare (indent 1))
-  (if (>= emacs-major-version 30)
+  (if (fboundp 'treesit-node-get)
       (treesit-node-get node instructions)
     (while (and node instructions)
       (pcase (pop instructions)

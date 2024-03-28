@@ -30,12 +30,12 @@
 ;;; Code:
 
 (require 'treesit)
-(require 'compile)
 (require 'outline)
 
 (require 'typst-ts-embedding-lang-settings)
 (require 'typst-ts-utils)
 (require 'typst-ts-faces)
+(require 'typst-ts-compile)
 (require 'typst-ts-watch-mode)
 
 (defgroup typst-ts nil
@@ -85,31 +85,6 @@ Note: this may take some time for documents with lot of raw blocks."
   :type 'boolean
   :group 'typst-ts)
 
-(defcustom typst-ts-mode-executable-location "typst"
-  "The location or name(if in variable `exec-path') for Typst executable."
-  :type 'string
-  :group 'typst-ts)
-
-(defcustom typst-ts-mode-compile-options ""
-  "User defined compile options for `typst-ts-mode-compile'.
-The compile options will be passed to the end of
-`<typst-executable> compile <current-file>' command."
-  :type 'string
-  :group 'typst-ts)
-
-(defcustom typst-ts-mode-before-compile-hook nil
-  "Hook runs after compile."
-  :type 'hook
-  :group 'typst-ts)
-
-(defcustom typst-ts-mode-after-compile-hook nil
-  "Hook runs after compile.
-Note the requirement of this hook is the same as `compilation-finish-functions'.
-Also note that this hook runs with typst buffer(the buffer you are editing) as
-the current buffer."
-  :type 'hook
-  :group 'typst-ts)
-
 ;; ==============================================================================
 ;; TODO typst has three modes (namely 'markup', 'code' and 'math')
 ;; Currently only add common settings to syntax table
@@ -126,7 +101,7 @@ the current buffer."
   "You can customize this variable to override the whole default font lock rules.
 Like this:
 
-(setq typst-ts-mode-font-lock-rules
+ (setq typst-ts-mode-font-lock-rules
         (append
          (typst-ts-mode-font-lock-rules)
          \='(
@@ -175,7 +150,7 @@ BTW, if you want to enable/disable specific font lock feature, please change
   "See variable `typst-ts-mode-font-lock-rules'.")
 
 (defun typst-ts-mode-highlight-raw-block-fn (node _override _start _end)
-  "A function used in `typst-ts-mode-font-lock-rules'.
+  "A function used in function `typst-ts-mode-font-lock-rules'.
 This function assign `typst-ts-markup-rawblock-blob-face' to those raw block
 whose language cannot be found or be loaded.
 NODE."
@@ -666,18 +641,6 @@ NODE, PARENT and BOL see `treesit-indent-function'."
   "Generate name of NODE for displaying in Imenu."
   (treesit-node-text node))
 
-(defun typst-ts-mode-compile--compilation-finish-function (cur-buffer)
-  "For `typst-ts-mode-after-compile-hook' and `compilation-finish-functions'.
-CUR-BUFFER: original typst buffer, in case user set
-`display-buffer-alist' option for compilation buffer to switch to compilation
-buffer before compilation."
-  (lambda (compilation-buffer msg)
-    (unwind-protect
-        (with-current-buffer cur-buffer
-          (run-hook-with-args 'typst-ts-mode-after-compile-hook compilation-buffer msg))
-      (remove-hook 'compilation-finish-functions
-                   (typst-ts-mode-compile--compilation-finish-function cur-buffer)))))
-
 ;; outline-minor-mode ================================================================================
 
 (defconst typst-ts-mode-outline-regexp "^[[:space:]]*\\(=+\\) "
@@ -736,45 +699,26 @@ Return the heading node when yes otherwise nil."
 When there is no relevant action to do it will execute the relevant function in
 the `GLOBAL-MAP' (example: `right-word')."
   (let ((heading (typst-ts-mode-heading--at-point-p))
-	;; car function, cdr string of function for `substitute-command-keys'
-	(call-me/string
-	 (pcase direction
-	   ('left
-	    (cons #'outline-promote
-		  "\\[typst-ts-mode-heading-decrease]"))
-	   ('right
-	    (cons #'outline-demote
-		  "\\[typst-ts-mode-heading-decrease]"))
-	   ('up
-	    (cons #'outline-move-subtree-up
-		  "\\[typst-ts-mode-heading-up]"))
-	   ('down
-	    (cons #'outline-move-subtree-down
-		  "\\[typst-ts-mode-heading-down]"))
-	   (_ (error "%s is not one of: `right' `left'" direction)))))
+	      ;; car function, cdr string of function for `substitute-command-keys'
+	      (call-me/string
+	       (pcase direction
+	         ('left
+	          (cons #'outline-promote
+		              "\\[typst-ts-mode-heading-decrease]"))
+	         ('right
+	          (cons #'outline-demote
+		              "\\[typst-ts-mode-heading-decrease]"))
+	         ('up
+	          (cons #'outline-move-subtree-up
+		              "\\[typst-ts-mode-heading-up]"))
+	         ('down
+	          (cons #'outline-move-subtree-down
+		              "\\[typst-ts-mode-heading-down]"))
+	         (_ (error "%s is not one of: `right' `left'" direction)))))
     (if heading
-	(call-interactively (car call-me/string))
+	      (call-interactively (car call-me/string))
       (call-interactively
        (keymap-lookup global-map (substitute-command-keys (cdr call-me/string)))))))
-
-(defun typst-ts-mode-compile ()
-  "Compile current typst file."
-  (interactive)
-  (run-hooks typst-ts-mode-before-compile-hook)
-
-  ;; The reason to take such a awkward solution is that `compilation-finish-functions'
-  ;; should be a global variable and also its functions. It doesn't work if we
-  ;; define them inside a let binding.
-  (add-hook 'compilation-finish-functions
-            (typst-ts-mode-compile--compilation-finish-function (current-buffer)))
-  (compile
-   (format "%s compile %s %s"
-           typst-ts-mode-executable-location
-           (file-name-nondirectory buffer-file-name)
-           typst-ts-mode-compile-options)
-   'typst-ts-compilation-mode))
-
-;; RETURN ================================================================================
 
 (defun typst-ts-mode--item-on-line-p ()
   "Does the current line have an item node?
@@ -895,58 +839,10 @@ When there is no section it will insert a heading below point."
     (insert heading-level " ")
     (indent-according-to-mode)))
 
-;;;###autoload
-(defun typst-ts-mode-preview (file)
-  "Open the result compile file.
-FILE: file path for the result compile file."
-  (interactive (list (concat (file-name-base buffer-file-name) ".pdf")))
-  ;; don't use `browse-url-of-file', which cannot open non-english documents
-  (browse-url file))
-
-(defun typst-ts-mode-compile-and-preview--compilation-finish-function (cur-buffer)
-  "For `typst-ts-mode-compile-and-preview' and `compilation-finish-functions'.
-CUR-BUFFER: original typst buffer, in case user set
-`display-buffer-alist' option for compilation buffer to switch to compilation
-buffer before compilation."
-  (lambda (_b _msg)
-    (unwind-protect
-        (with-current-buffer cur-buffer
-          (call-interactively #'typst-ts-mode-preview))
-      (remove-hook 'compilation-finish-functions
-                   (typst-ts-mode-compile-and-preview--compilation-finish-function cur-buffer)))))
-
-;;;###autoload
-(defun typst-ts-mode-compile-and-preview ()
-  "Compile & Preview.
-Assuming the compile output file name is in default style."
-  (interactive)
-  ;; use a local variable version of `compilation-finish-functions' to shadow
-  ;; global version doesn't work
-  (add-hook 'compilation-finish-functions
-            (typst-ts-mode-compile-and-preview--compilation-finish-function
-             (current-buffer)))
-  (typst-ts-mode-compile))
-
-(defvar typst-ts-compilation-mode-error
-  (cons (rx bol "error:" (+ not-newline) "\n" (+ blank) "┌─ "
-            (group (+ not-newline)) ":" ;; file
-            (group (+ num)) ":"         ;; start-line
-            (group (+ num)) "\n")       ;; start-col
-        '(1 2 3))
-  "Regexp for Error in compilation buffer.")
-
-;;;###autoload
-(define-compilation-mode typst-ts-compilation-mode "Typst Compilation"
-  "Customized major mode for typst watch compilation."
-  (setq-local compilation-error-regexp-alist-alist nil)
-  (add-to-list 'compilation-error-regexp-alist-alist
-               (cons 'typst-error typst-ts-compilation-mode-error))
-  (setq-local compilation-error-regexp-alist nil)
-  (add-to-list 'compilation-error-regexp-alist 'typst-error))
-
-(defun typst-ts-mode-column-at-pos (pos)
+(defun typst-ts-mode-column-at-pos (point)
+  "Get the column at position POINT."
   (save-excursion
-    (goto-char pos)
+    (goto-char point)
     (current-column)))
 
 ;;;###autoload
@@ -1026,10 +922,18 @@ Assuming the compile output file name is in default style."
       (call-interactively (global-key-binding (kbd "TAB"))))))
 
 ;;;###autoload
+(defun typst-ts-mode-preview (file)
+  "Open the result compile file.
+FILE: file path for the result compile file."
+  (interactive (typst-ts-compile-get-result-pdf-filename))
+  ;; don't use `browse-url-of-file', which cannot open non-english documents
+  (browse-url file))
+
+;;;###autoload
 (defvar typst-ts-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c c") #'typst-ts-mode-compile-and-preview)
-    (define-key map (kbd "C-c C-c C") #'typst-ts-mode-compile)
+    (define-key map (kbd "C-c C-c c") #'typst-ts-compile-and-preview)
+    (define-key map (kbd "C-c C-c C") #'typst-ts-compile)
     (define-key map (kbd "C-c C-c w") #'typst-ts-watch-mode)
     (define-key map (kbd "C-c C-c p") #'typst-ts-mode-preview)
     (define-key map (kbd "M-<left>") #'typst-ts-mode-heading-decrease)
@@ -1197,10 +1101,12 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
 
   ;; Compile Command
   (ignore-errors
-    (format "%s compile %s %s"
-            typst-ts-mode-executable-location
-            (file-name-nondirectory buffer-file-name)
-            typst-ts-mode-compile-options))
+    (setq-local
+     compile-command
+     (format "%s compile %s %s"
+             typst-ts-compile-executable-location
+             (file-name-nondirectory buffer-file-name)
+             typst-ts-compile-options)))
 
   (when (>= emacs-major-version 30)
     (if (not typst-ts-mode-enable-raw-blocks-highlight)

@@ -835,6 +835,8 @@ Use this function as one notifier of `treesit-parser-notifiers'."
 ;;; synchronizely) =============================================================
 
 (defun typst-ts-els--get-lang-input (lang)
+  "Get lowercase symbol of LANG.
+LANG should be either a symbol or string."
   (if (symbolp lang)
       (intern (downcase (symbol-name lang)))
     (if (stringp lang)
@@ -842,6 +844,8 @@ Use this function as one notifier of `treesit-parser-notifiers'."
       (error "LANG should be either symbol or string"))))
 
 (defun typst-ts-els--get-tags-input (tags)
+  "Get lowercase string(s) of TAGS.
+TAGS should be either a string or a list of strings."
   (if (stringp tags)
       (list (downcase tags))
     (if (and (listp tags)
