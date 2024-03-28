@@ -86,8 +86,8 @@ If BUFFER is nil, it means use the current buffer.
 CHECK: non-nil mean check the file existence.
 Return nil if the BUFFER has not associated file or the there is
 no compiled pdf file when CHECK is non-nil."
-  (when buffer-file-name
-    (let ((res (concat (file-name-base (buffer-file-name buffer)) ".pdf")))
+  (when-let ((typst-file (buffer-file-name buffer)))
+    (let ((res (concat (file-name-base typst-file) ".pdf")))
       (if check
           (when (file-exists-p res)
             res)
