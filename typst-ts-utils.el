@@ -23,7 +23,9 @@
 
 (require 'treesit)
 
-(declare-function treesit-parser-list "treesit.c")
+;; don't use 'treesit.c' since package Emacs distribution may separate the source
+;; code from Emacs binary
+(declare-function treesit-parser-list "treesit" t t)
 
 (defun typst-ts-utils-parser-list (&optional buffer language)
   "An comptibility function for Emacs 29's `treesit-parser-list' function.
