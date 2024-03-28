@@ -925,7 +925,7 @@ When there is no section it will insert a heading below point."
 (defun typst-ts-mode-preview (file)
   "Open the result compile file.
 FILE: file path for the result compile file."
-  (interactive (typst-ts-compile-get-result-pdf-filename))
+  (interactive (list (typst-ts-compile-get-result-pdf-filename)))
   ;; don't use `browse-url-of-file', which cannot open non-english documents
   (browse-url file))
 

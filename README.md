@@ -45,17 +45,17 @@ Example configuration.
 
 ## Keys
 
-**C-c C-c c** : **typst-ts-mode-compile-and-preview**  
-**C-c C-c C** : **typst-ts-mode-compile**  
-**C-c C-c w** : **typst-ts-mode-watch-toggle**  
+**C-c C-c c** : **typst-ts-compile-and-preview**  
+**C-c C-c C** : **typst-ts-compile**  
+**C-c C-c w** : **typst-ts-watch-mode**  
 **C-c C-c p** : **typst-ts-mode-preview**  
 **M-<left>**  : **typst-ts-mode-heading-decrease**  
 **M-<right>** : **typst-ts-mode-heading-increase**  
 **M-<up>**    : **typst-ts-mode-heading-up**  
 **M-<down>**  : **typst-ts-mode-heading-down**  
-**TAB**       : **typst-ts-mode-cycle**  
 **M-<return>**: **typst-ts-mode-meta-return**  
 **<return>**  : **typst-ts-mode-return**  
+**TAB**       : **typst-ts-mode-cycle**  
 
 *NOTE*: `outline-minor-mode` is enabled by `typst-ts-mode`, so you can use command 
 defined by `outline-minor-mode` such as `outline-cycle`.
@@ -67,21 +67,21 @@ For customizable options: `customize` -> `typst-ts`.
 Here are some options you may find useful:  
 1. **typst-ts-mode-indent-offset** (default 4)  
    Use [outline-indent-mode](https://sr.ht/~meow_king/outline-indent-mode/) to behave like `org-indent-mode`.
-2. **typst-ts-mode-executable-location**  
+2. **typst-ts-compile-executable-location**  
 3. **typst-ts-watch-options**.  
    Set this to `--open` so typst will open the compiled file for you.
-4. **typst-ts-mode-compile-options**.  
+4. **typst-ts-compile-options**.  
    Note that setting `--open` has no use for this customization variable. 
    You can execute the shell command `typst compile <file> --open && sleep 1`
    to view what is happening. 
-5. **typst-ts-mode-display-watch-process-bufer-automatically**. (default `t`)  
+5. **typst-ts-watch-auto-display-compilation-error**. (default `t`)  
    so the `typst watch` process buffer appear when an error occurs, and 
    disappear when there is no error. You may find sometimes there is only one 
    error at a time, and it is because Typst itself do this style. 
    You may find `auto-save-visited-mode`,
    [auto-save](https://github.com/manateelazycat/auto-save) or 
    [super-save](https://github.com/bbatsov/super-save) useful (or annoying).
-6. **typst-ts-mode-before-compile-hook** and **typst-ts-mode-after-compile-hook**  
+6. **typst-ts-compile-before-compilation-hook** and **typst-ts-compile-after-compilation-hook**  
 7. **typst-ts-mode-return-autoincrement** autoincrement lists when pressing RETURN (default `t`).
 8. **typst-ts-mode-grammar-location**: used for grammar version check (may not be accurate every time)
 
