@@ -53,14 +53,14 @@ The compile options will be passed to the
   :type 'string
   :group 'typst-ts-watch)
 
-(defcustom typst-ts-display-watch-process-bufer-automatically t
+(defcustom typst-ts-watch-auto-display-compilation-error t
   "Whether the typst watch process buffer should be displayed automatically.
 This means the buffer will be displayed when error occurs, hide when error
 is eliminated."
   :type 'boolean
   :group 'typst-ts-watch)
 
-(defcustom typst-ts-display-watch-process-buffer-parameters
+(defcustom typst-ts-watch-display-buffer-parameters
   `(display-buffer-at-bottom
     (window-height . fit-window-to-buffer))
   "Display buffer parameters."
@@ -97,11 +97,11 @@ PROC: process; OUTPUT: new output from PROC."
                 next-match-start-pos (match-end 0)))
         ;; Insert the Error text
         (if (not res-output)
-            (when (and typst-ts-display-watch-process-bufer-automatically window)
+            (when (and typst-ts-watch-auto-display-compilation-error window)
               (delete-window window))
           (insert res-output)
           (goto-char (point-min))
-          (when typst-ts-display-watch-process-bufer-automatically
+          (when typst-ts-watch-auto-display-compilation-error
             (typst-ts-watch-display-buffer)))))))
 
 ;;;###autoload
@@ -112,7 +112,7 @@ PROC: process; OUTPUT: new output from PROC."
       (user-error "The typst watch process buffer %s is not alive!" typst-ts-watch-process-buffer-name)
     (display-buffer
      typst-ts-watch-process-buffer-name
-     typst-ts-display-watch-process-buffer-parameters)))
+     typst-ts-watch-display-buffer-parameters)))
 
 ;;;###autoload
 (defun typst-ts-watch-start ()
