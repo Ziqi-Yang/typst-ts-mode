@@ -56,6 +56,7 @@ Example configuration.
 **M-<return>**: **typst-ts-mode-meta-return**  
 **<return>**  : **typst-ts-mode-return**  
 **TAB**       : **typst-ts-mode-cycle**  
+**C-c '**     : **typst-ts-edit-indirect**  
 
 *NOTE*: `outline-minor-mode` is enabled by `typst-ts-mode`, so you can use command 
 defined by `outline-minor-mode` such as `outline-cycle`.
