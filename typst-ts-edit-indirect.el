@@ -36,9 +36,13 @@ If there is no fitting mode or no lang it will be `normal-mode'."
                 (treesit-node-child-by-field-name
                  (treesit-node-parent
                   (with-current-buffer parent-buffer
-                    (treesit-node-at beg)))
+                    (treesit-node-at beg 'typst)))
                  "lang")))
-         (lang (if (string= lang "cpp") "c++" lang))
+         (lang (gethash lang typst-ts-els-tag-lang-map))
+         (lang (when lang  ; TODO
+                 (if (eq lang 'cpp)
+                     "c++"
+                   (symbol-name lang))))
          (ts-mode (intern-soft
                    (concat lang "-ts-mode")))
          (non-ts-mode (intern-soft
@@ -55,7 +59,7 @@ If there is no fitting mode or no lang it will be `normal-mode'."
   "Edit the block at point with `edit-indirect-region'."
   (interactive)
   (let* ((block (treesit-parent-until
-                 (treesit-node-at (point))
+                 (treesit-node-at (point) 'typst)
                  (lambda (node)
                    (string= (treesit-node-type node) "raw_blck"))
                  t))
