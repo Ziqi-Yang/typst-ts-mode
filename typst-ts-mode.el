@@ -37,6 +37,7 @@
 (require 'typst-ts-faces)
 (require 'typst-ts-compile)
 (require 'typst-ts-watch-mode)
+(require 'typst-ts-edit-indirect)
 
 (defgroup typst-ts nil
   "Tree Sitter enabled Typst Writing."
@@ -943,6 +944,7 @@ FILE: file path for the result compile file."
     (define-key map (kbd "M-<return>") #'typst-ts-mode-meta-return)
     (define-key map (kbd "<return>") #'typst-ts-mode-return)
     (define-key map (kbd "TAB") #'typst-ts-mode-cycle)
+    (define-key map (kbd "C-c '") #'typst-ts-edit-indirect)
     map))
 
 (defun typst-ts-mode--language-at-point (pos)
