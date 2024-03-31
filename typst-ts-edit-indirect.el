@@ -21,7 +21,10 @@
 
 ;;; Code:
 
-(require 'edit-indirect)
+(require 'typst-ts-embedding-lang-settings)
+(require 'edit-indirect nil t)
+(defvar edit-indirect-guess-mode-function)
+(defvar edit-indirect-after-commit-functions)
 
 (defun typst-ts-edit-indirect--guess-mode (parent-buffer beg _end)
   "Guess the mode for `edit-indirect-guess-mode-function'.
@@ -58,6 +61,8 @@ If there is no fitting mode or no lang it will be `normal-mode'."
 (defun typst-ts-edit-indirect ()
   "Edit the block at point with `edit-indirect-region'."
   (interactive)
+  (unless (fboundp 'edit-indirect-region)
+    (user-error "You need to install package edit-indirect to enable editing in another buffer"))
   (let* ((block (treesit-parent-until
                  (treesit-node-at (point) 'typst)
                  (lambda (node)
