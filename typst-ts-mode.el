@@ -177,7 +177,7 @@ If you want to customize the rules, please customize the same name variable
   (let ((markup-basic
          (pcase typst-ts-mode-fontification-precision-level
            ('min
-            `((heading) @typst-ts-markup-header-face
+            `((heading _ @typst-ts-markup-header-indicator-face (text) @typst-ts-markup-header-face)
               (emph) @typst-ts-markup-emphasis-face
               (strong) @typst-ts-markup-strong-face
               (item) @typst-ts-markup-item-face
@@ -193,7 +193,7 @@ If you want to customize the rules, please customize the same name variable
               (label) @typst-ts-markup-label-face
               (ref) @typst-ts-markup-reference-face))
            ('middle
-            `((heading) @typst-ts-markup-header-face
+            `((heading _ @typst-ts-markup-header-indicator-face (text) @typst-ts-markup-header-face) 
               (emph) @typst-ts-markup-emphasis-face
               (strong) @typst-ts-markup-strong-face
               (item
@@ -219,18 +219,7 @@ If you want to customize the rules, please customize the same name variable
               (ref) @typst-ts-markup-reference-face))
            ('max
             `(,@(if typst-ts-markup-header-same-height
-                    '((heading "=" @typst-ts-markup-header-indicator-face
-                               (text) @typst-ts-markup-header-face)
-                      (heading "==" @typst-ts-markup-header-indicator-face
-                               (text) @typst-ts-markup-header-face)
-                      (heading "===" @typst-ts-markup-header-indicator-face
-                               (text) @typst-ts-markup-header-face)
-                      (heading "====" @typst-ts-markup-header-indicator-face
-                               (text) @typst-ts-markup-header-face)
-                      (heading "=====" @typst-ts-markup-header-indicator-face
-                               (text) @typst-ts-markup-header-face)
-                      (heading "======" @typst-ts-markup-header-indicator-face
-                               (text) @typst-ts-markup-header-face))
+                    '((heading _ @typst-ts-markup-header-indicator-face (text) @typst-ts-markup-header-face))
                   '((heading "=" @typst-ts-markup-header-indicator-face-1
                              (text) @typst-ts-markup-header-face-1)
                     (heading "==" @typst-ts-markup-header-indicator-face-2
@@ -243,6 +232,7 @@ If you want to customize the rules, please customize the same name variable
                              (text) @typst-ts-markup-header-face-5)
                     (heading "======" @typst-ts-markup-header-indicator-face-6
                              (text) @typst-ts-markup-header-face-6)))
+              ;; TODO performance enhancement 
               (emph
                "_" @typst-ts-markup-emphasis-indicator-face
                (text) @typst-ts-markup-emphasis-face
@@ -332,6 +322,7 @@ If you want to customize the rules, please customize the same name variable
            (include "include" @font-lock-keyword-face)
            (show "show" @font-lock-keyword-face)
            (set "set" @font-lock-keyword-face)
+           (context "context" @font-lock-keyword-face)
            (return "return" @font-lock-keyword-face)
            (flow ["break" "continue"] @font-lock-keyword-face)
 
