@@ -45,17 +45,18 @@ Example configuration.
 
 ## Keys
 
-**C-c C-c c** : **typst-ts-compile-and-preview**  
-**C-c C-c C** : **typst-ts-compile**  
-**C-c C-c w** : **typst-ts-watch-mode**  
-**C-c C-c p** : **typst-ts-mode-preview**  
-**M-<left>**  : **typst-ts-mode-heading-decrease**  
-**M-<right>** : **typst-ts-mode-heading-increase**  
-**M-<up>**    : **typst-ts-mode-heading-up**  
-**M-<down>**  : **typst-ts-mode-heading-down**  
-**M-<return>**: **typst-ts-mode-meta-return**  
-**<return>**  : **typst-ts-mode-return**  
-**TAB**       : **typst-ts-mode-cycle**  
+**C-c C-c c**   : **typst-ts-compile-and-preview**  
+**C-c C-c C**   : **typst-ts-compile**  
+**C-c C-c w**   : **typst-ts-watch-mode**  
+**C-c C-c p**   : **typst-ts-mode-preview**  
+**M-\<left\>**  : **typst-ts-mode-heading-decrease**  
+**M-\<right\>** : **typst-ts-mode-heading-increase**  
+**M-\<up\>**    : **typst-ts-mode-heading-up**  
+**M-\<down\>**  : **typst-ts-mode-heading-down**  
+**M-\<return\>**: **typst-ts-mode-meta-return**  
+**\<return\>**  : **typst-ts-mode-return**  
+**TAB**         : **typst-ts-mode-cycle**  
+**C-c '**       : **typst-ts-edit-indirect** (requires <https://github.com/Fanael/edit-indirect/>)
 
 *NOTE*: `outline-minor-mode` is enabled by `typst-ts-mode`, so you can use command 
 defined by `outline-minor-mode` such as `outline-cycle`.

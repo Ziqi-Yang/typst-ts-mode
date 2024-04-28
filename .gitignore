@@ -1,5 +1,4 @@
 *.elc
-indentation-test.typ
 /makem.sh
 
 # Added by cargo
