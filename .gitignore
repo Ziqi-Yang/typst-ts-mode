@@ -1,6 +1,6 @@
 *.elc
 /side/*.pdf
-/makem.sh
+makem.sh
 
 # Added by cargo
 

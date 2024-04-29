@@ -1,5 +1,5 @@
 ;;; typst-ts-compile.el --- Compile Typst Files  -*- lexical-binding: t; -*-
-;; Copyright (C) 2024 Meow King <mr.meowking@anche.no>
+;; Copyright (C) 2023 The typst-ts-mode Project Contributors
 
 ;; This file is NOT part of Emacs.
 ;; This program is free software: you can redistribute it and/or modify

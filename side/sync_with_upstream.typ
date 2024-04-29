@@ -97,5 +97,7 @@ Use `git diff` or `git blame` to get the grammar change.
     [`["," ";" ".." ":" "sep"] @punctuation.delimiter`], yes,
     [`"assign" @punctuation`]                  , yes,
     [`(field "." @punctuation)`]               , yes,
-)
 
+    tableSep([ Node not included in `/queries/typst/highlights.scm` ]),
+    [ `(code)` ], [ HAVEN'T ADDED since it isn't visual (for highlighting) and doesn't affect indentation ]
+)
