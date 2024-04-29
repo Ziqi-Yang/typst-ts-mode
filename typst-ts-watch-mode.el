@@ -61,9 +61,12 @@ is eliminated."
   :group 'typst-ts-watch)
 
 (defcustom typst-ts-watch-display-buffer-parameters
-  `(display-buffer-at-bottom
+  '(display-buffer-at-bottom
     (window-height . fit-window-to-buffer))
-  "Display buffer parameters."
+  "Display buffer parameters.
+Note that since the major mode of typst watch buffer is derived from compilation
+ mode. If you have a rule like `((derived-mode . compilation-mode) ...)' in
+your `display-buffer-alist', then this option will be covered by that rule."
   :type 'symbol
   :group 'typst-ts-watch)
 
@@ -108,11 +111,10 @@ PROC: process; OUTPUT: new output from PROC."
 (defun typst-ts-watch-display-buffer ()
   "Display typst watch process buffer."
   (interactive)
-  (if (not (buffer-live-p (get-buffer typst-ts-watch-process-buffer-name)))
-      (user-error "The typst watch process buffer %s is not alive!" typst-ts-watch-process-buffer-name)
-    (display-buffer
-     typst-ts-watch-process-buffer-name
-     typst-ts-watch-display-buffer-parameters)))
+  (when (and (called-interactively-p) (not (buffer-live-p typst-ts-watch-process-buffer-name)))
+    (user-error "The typst watch process buffer '%s' is not alive!" typst-ts-watch-process-buffer-name))
+  (let ((buf (get-buffer-create typst-ts-watch-process-buffer-name)))
+    (display-buffer buf typst-ts-watch-display-buffer-parameters)))
 
 ;;;###autoload
 (defun typst-ts-watch-start ()
