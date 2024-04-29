@@ -110,7 +110,8 @@ If there is no fitting mode or no lang it will be `normal-mode'."
       (save-excursion
         (goto-char beg)
         (insert " "))
-      (edit-indirect-region beg end t)
+      (when (fboundp 'edit-indirect-region)  ; pass elisp's dumb linter
+        (edit-indirect-region beg end t))
       ;; delete the inserted space
       (save-excursion
         (goto-char (point-min))
