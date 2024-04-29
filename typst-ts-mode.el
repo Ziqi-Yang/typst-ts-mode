@@ -59,7 +59,8 @@ This variable is used in `typst-ts-mode-check-grammar-version'."
                  (const :tag "Don't enable grammar version check" nil))
   :group 'typst-ts)
 
-(defvar typst-ts-mode--grammar-minimum-version-timestamp 1709115941
+;; `git log -n1 --date=raw` or `git log -n1 --format="%at"`
+(defvar typst-ts-mode--grammar-minimum-version-timestamp 1713791627
   "Timestamp for the minimum supported typst tree sitter grammar version.")
 
 (defcustom typst-ts-mode-fontification-precision-level 'middle

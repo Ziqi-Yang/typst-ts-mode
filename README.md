@@ -14,11 +14,11 @@ Tree Sitter support for Typst. Minimum Emacs version requirement: 29.
 1. Emacs >= 29
 
 2. Latest [Typst](https://github.com/typst/typst).  
-`typst 0.10.0 (70ca0d25)`
+`typst 0.11.0`
 
 3. Tree Sitter grammar for Typst: https://github.com/uben0/tree-sitter-typst  
-   commit: `3c3e5f8e0caeba6157e26a1bedf8321e1da62799 - Feb 28, 2024`  
-   To install the grammar, you can execute the following elisp code:  
+   commit: `4610172f312e8ce5184e6882be5ad1a1cd800fbe -  Mon Apr 22 15:13:47 2024 +0200`  
+   To install the grammar, you can execute the following elisp code (once):  
 
    ``` emacs-lisp
    (add-to-list 'treesit-language-source-alist
@@ -34,13 +34,8 @@ Example configuration.
 ``` emacs-lisp
 (use-package typst-ts-mode
   :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode" :files (:defaults "*.el"))
-  :custom
-  ;; don't add "--open" if you'd like `watch` to be an error detector
-  (typst-ts-mode-watch-options "--open")
-  
-  ;; experimental settings (I'm the main dev, so I enable these)
-  (typst-ts-mode-enable-raw-blocks-highlight t)
-  (typst-ts-mode-highlight-raw-blocks-at-startup t))
+  ;; (optional) checking typst grammar version needs it
+  (typst-ts-mode-grammar-location (expand-file-name "tree-sitter/libtree-sitter-typst.so" user-emacs-directory)))
 ```
 
 ## Keys
@@ -83,8 +78,8 @@ Here are some options you may find useful:
    [auto-save](https://github.com/manateelazycat/auto-save) or 
    [super-save](https://github.com/bbatsov/super-save) useful (or annoying).
 6. **typst-ts-compile-before-compilation-hook** and **typst-ts-compile-after-compilation-hook**  
-7. **typst-ts-mode-return-autoincrement** autoincrement lists when pressing RETURN (default `t`).
-8. **typst-ts-mode-grammar-location**: used for grammar version check (may not be accurate every time)
+7. **typst-ts-mode-return-autoincrement** auto-increment lists when pressing RETURN (default `t`).
+8. **typst-ts-mode-grammar-location**: used for grammar version check at major mode start.
 
 ### Fontification
 1. **typst-ts-mode-fontification-precise-level** (default `'middle`)  
