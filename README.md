@@ -24,7 +24,7 @@ Tree Sitter support for Typst. Minimum Emacs version requirement: 29.
    (treesit-install-language-grammar 'typst)
    ```
 
-   Note there are also [tree sitter modules](https://github.com/casouri/tree-sitter-module), [treesit-auto](https://github.com/renzmann/treesit-auto) and [treesit-langs](https://github.com/kiennq/treesit-langs) for you to easily manage your tree sitter modes and grammars. For vanilla solution, there is my [configuration](https://github.com/Ziqi-Yang/.emacs.d/blob/main/languages/l-treesit.el) for reference.
+Note there are also [tree sitter modules](https://github.com/casouri/tree-sitter-module), [treesit-auto](https://github.com/renzmann/treesit-auto), [tree-sitter-langs](https://github.com/emacs-tree-sitter/tree-sitter-langs) and [treesit-langs](https://github.com/kiennq/treesit-langs) for you to easily manage your tree sitter modes and grammars. For vanilla solution, there is my [configuration](https://github.com/Ziqi-Yang/.emacs.d/blob/main/languages/l-treesit.el) for reference.
 
 ## Installation
 
@@ -34,6 +34,7 @@ Example configuration.
   :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode" :files (:defaults "*.el"))
   :custom
   ;; (optional) If you want to ensure your typst tree sitter grammar version is greater than the minimum requirement
+  ;; Note this only check and compare file modification time
   (typst-ts-mode-grammar-location (expand-file-name "tree-sitter/libtree-sitter-typst.so" user-emacs-directory)))
 ```
 
@@ -72,7 +73,7 @@ Here are some options you may find useful:
    This variable controls whether `typst watch` process buffer will appear when an error occurs, and disappear when there is no error.
    You may find `auto-save-visited-mode`, [auto-save](https://github.com/manateelazycat/auto-save) or [super-save](https://github.com/bbatsov/super-save) useful (or annoying).
 6. **typst-ts-compile-before-compilation-hook** and **typst-ts-compile-after-compilation-hook**  
-7. **typst-ts-mode-grammar-location**: used for grammar version check at major mode start.
+7. **typst-ts-mode-grammar-location**: used for grammar version check at major mode start. Note it only check and compare the grammar file modification date.
 
 ### Fontification
 1. **typst-ts-mode-fontification-precise-level** (default `'middle`)  
