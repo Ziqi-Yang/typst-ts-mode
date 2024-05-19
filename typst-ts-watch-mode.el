@@ -111,7 +111,8 @@ PROC: process; OUTPUT: new output from PROC."
 (defun typst-ts-watch-display-buffer ()
   "Display typst watch process buffer."
   (interactive)
-  (when (and (called-interactively-p) (not (buffer-live-p typst-ts-watch-process-buffer-name)))
+  (when (and (called-interactively-p 'interactive)
+             (not (buffer-live-p typst-ts-watch-process-buffer-name)))
     (user-error "The typst watch process buffer '%s' is not alive!" typst-ts-watch-process-buffer-name))
   (let ((buf (get-buffer-create typst-ts-watch-process-buffer-name)))
     (display-buffer buf typst-ts-watch-display-buffer-parameters)))
