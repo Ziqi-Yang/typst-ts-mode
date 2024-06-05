@@ -110,6 +110,11 @@ command [consult](https://github.com/minad/consult), you way want this setting.
                            (?f "Functions" font-lock-function-name-face))))))
 ```
 
+## Related Packages
+
++ [outline-indent-mode](https://sr.ht/~meow_king/outline-indent-mode/) Dynamic indentation based on outline
++ [tip](https://git.sr.ht/~mafty/tip) Typst Inline Preview 
+
 ## Contribute
 
 Please work on `develop` branch, which will be combined into `main` branch every one week or so if there are new commits.  
