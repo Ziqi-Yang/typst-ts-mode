@@ -1,11 +1,31 @@
 #import "@preview/cheq:0.1.0": unchecked-sym, checked-sym
 
+#let cross-sym(fill: white, stroke: rgb("#616161"), radius: .1em) = move(
+    dy: -.08em,
+    box(
+        stroke: .05em + stroke,
+        fill: stroke,
+        height: .8em,
+        width: .8em,
+        radius: radius,
+        {
+            // Draw the first diagonal line of the cross
+            box(move(dy: 0.38em, dx: 0.1em, rotate(45deg, line(length: 0.64em, stroke: fill + .1em))))
+            // Draw the second diagonal line of the cross
+            box(move(dy: -0.28em, dx: 0.1em, rotate(-45deg, line(length: 0.64em, stroke: fill + .1em))))
+        },
+    ),
+)
+
 #let yes = checked-sym(fill: luma(95%), stroke: blue, radius: .2em)
 #let todo = unchecked-sym(fill: luma(95%), stroke: blue, radius: .2em)
+#let no = cross-sym(fill: luma(95%), stroke: red, radius: 0.2em)
 
 #let cyan = rgb("EAF2F5")
 #set table(fill: (_, y) => if y == 0 { cyan })
 #let tableSep(content) = table.cell(fill: cyan, colspan: 2, text(content))
+
+
 
 #link("https://github.com/uben0/tree-sitter-typst?tab=readme-ov-file")[tree-sitter-typst]
 
