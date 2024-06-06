@@ -24,7 +24,7 @@ Tree Sitter support for Typst. Minimum Emacs version requirement: 29.
    (treesit-install-language-grammar 'typst)
    ```
 
-Note there are also [tree sitter modules](https://github.com/casouri/tree-sitter-module), [treesit-auto](https://github.com/renzmann/treesit-auto), [tree-sitter-langs](https://github.com/emacs-tree-sitter/tree-sitter-langs) and [treesit-langs](https://github.com/kiennq/treesit-langs) for you to easily manage your tree sitter modes and grammars. For vanilla solution, there is my [configuration](https://github.com/Ziqi-Yang/.emacs.d/blob/main/languages/l-treesit.el) for reference.
+Note there are also [tree sitter modules](https://github.com/casouri/tree-sitter-module), [treesit-auto](https://github.com/renzmann/treesit-auto), [tree-sitter-langs](https://github.com/emacs-tree-sitter/tree-sitter-langs) and [treesit-langs](https://github.com/kiennq/treesit-langs) for you to easily manage your tree sitter modes and grammars. For vanilla solution, here is my [configuration](https://github.com/Ziqi-Yang/.emacs.d/blob/main/languages/l-treesit.el) for reference.
 
 ## Installation
 
