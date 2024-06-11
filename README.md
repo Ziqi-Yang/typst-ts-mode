@@ -16,6 +16,7 @@ Tree Sitter support for Typst. Minimum Emacs version requirement: 29.
 
 3. Tree Sitter grammar for Typst: https://github.com/uben0/tree-sitter-typst  
    commit: `4610172f312e8ce5184e6882be5ad1a1cd800fbe -  Mon Apr 22 15:13:47 2024 +0200`  
+   Note that `typst-ts-mode` only works with uben0's Typst tree sitter grammar (this one). Other Typst tree sitter grammars like [frozolotl's](https://github.com/frozolotl/tree-sitter-typst) may not work as expected.  
    To install the grammar, you can execute the following elisp code (once):  
 
    ``` emacs-lisp
