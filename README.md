@@ -160,6 +160,13 @@ and `defcustom' forms reset their default values."
       (eval-defun nil))))
 ```
 
+### How to use different version of Emacs to test
+
+``` shell
+# change `emacs` to `emacs29`, `emacs30` or the path of your emacs executable 
+emacs -Q -L . --eval "(require 'typst-ts-mode)"
+```
+
 #### How to do lint
 I recommend you to use [makem.sh](https://github.com/alphapapa/makem.sh). However, you can choose anything you like.   
 To use it, first `cd` into the project root directory, then: 

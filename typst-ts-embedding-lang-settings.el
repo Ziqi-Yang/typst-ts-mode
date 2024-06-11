@@ -21,7 +21,7 @@
 
 ;;; Code:
 (require 'treesit)
-(require 'typst-ts-utils)
+(require 'typst-ts-core)
 
 (defcustom typst-ts-highlight-raw-block-langs-not-in-predefined-settings t
   "Whether to highlight raw block of language that is not in settings.
@@ -773,10 +773,10 @@ Use this function as one notifier of `treesit-parser-notifiers'."
            ;; parsers created by `treesit-language-at-point-function' (
            ;; `typst-ts-mode--language-at-point'.)
            ;; i.e. parsers cannot be created by `treesit-range-settings'
-           (mapcar #'treesit-parser-language (typst-ts-utils-parser-list))
+           (mapcar #'treesit-parser-language (typst-ts-core-parser-list))
            ;; parsers created by `treesit-range-settings'
            (mapcar #'treesit-parser-language
-                   (typst-ts-utils-local-parsers-on (point-min) (point-max))))))
+                   (typst-ts-core-local-parsers-on (point-min) (point-max))))))
         lang-ts-mode settings)
     (dolist (lang parser-langs)
       (unless (member lang typst-ts-els--include-languages)
@@ -789,7 +789,7 @@ Use this function as one notifier of `treesit-parser-notifiers'."
                   (typst-ts-els-merge-lang-settings lang)
                   ;; some feature like cmake-ts-mode will create a parser when
                   ;; the feature is required, so we need to clean thease parsers
-                  (mapc #'treesit-parser-delete (typst-ts-utils-parser-list nil lang))
+                  (mapc #'treesit-parser-delete (typst-ts-core-parser-list nil lang))
                   (message "Load %s language settings from configuration." lang))
               (error
                ;; if language not in setting or encounter error during loading,
@@ -801,7 +801,7 @@ Use this function as one notifier of `treesit-parser-notifiers'."
                        (typst-ts-els--add-treesit-range-rules lang)
                        ;; delete top level parsers, so range rules works (i.e. local parsers)
                        ;; so that highlighting will not exceed the desired range
-                       (mapc #'treesit-parser-delete (typst-ts-utils-parser-list nil lang))
+                       (mapc #'treesit-parser-delete (typst-ts-core-parser-list nil lang))
                        
                        ;; find and merge settings
                        (setq lang-ts-mode

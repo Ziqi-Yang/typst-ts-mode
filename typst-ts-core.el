@@ -1,4 +1,4 @@
-;;; typst-ts-utils.el --- utility functions for typst-ts-mode -*- lexical-binding: t; -*-
+;;; typst-ts-core.el --- core functions for typst-ts-mode -*- lexical-binding: t; -*-
 ;; Copyright (C) 2023 The typst-ts-mode Project Contributors
 
 ;; This file is NOT part of Emacs.
@@ -27,7 +27,14 @@
 ;; code from Emacs binary
 (declare-function treesit-parser-list "treesit" t t)
 
-(defun typst-ts-utils-parser-list (&optional buffer language)
+(defun typst-ts-core-get-node-bol (node)
+  "Get the NODE's indentation offset (at node beginning)."
+  (save-excursion
+    (goto-char (treesit-node-start node))
+    (back-to-indentation)
+    (point)))
+
+(defun typst-ts-core-parser-list (&optional buffer language)
   "An comptibility function for Emacs 29's `treesit-parser-list' function.
 BUFFER defaults to the current buffer.  If that buffer is an indirect
 buffer, its base buffer is used instead.  That is, indirect buffers
@@ -43,7 +50,7 @@ If LANGUAGE is non-nil, only return parsers for that language."
        parsers))))
 
 ;; code is from treesit.el inside Emacs Source
-(defun typst-ts-utils-local-parsers-at (&optional pos language with-host)
+(defun typst-ts-core-local-parsers-at (&optional pos language with-host)
   "Return all the local parsers at POS.
 It's a copy of Emacs 30's `treesit-local-parsers-at' function.
 POS LANGUAGE WITH-HOST."
@@ -60,7 +67,7 @@ POS LANGUAGE WITH-HOST."
       (nreverse res))))
 
 ;; code is from treesit.el inside Emacs Source
-(defun typst-ts-utils-local-parsers-on (&optional beg end language with-host)
+(defun typst-ts-core-local-parsers-on (&optional beg end language with-host)
   "Return all the local parsers between BEG END.
 It's a copy of Emacs 30's `treesit-local-parsers-on' function.
 BEG END LANGUAGE WITH-HOST."
@@ -76,7 +83,7 @@ BEG END LANGUAGE WITH-HOST."
             (push (if with-host (cons parser host-parser) parser) res))))
       (nreverse res))))
 
-(defun typst-ts-utils-node-get (node instructions)
+(defun typst-ts-core-node-get (node instructions)
   "Get things from NODE by INSTRUCTIONS.
 It's a copy of Emacs 30's `treesit-node-get' function."
   (declare (indent 1))
@@ -98,6 +105,6 @@ It's a copy of Emacs 30's `treesit-node-get' function."
                         (treesit-node-prev-sibling node named)))))))
     node))
 
-(provide 'typst-ts-utils)
+(provide 'typst-ts-core)
 
-;;; typst-ts-utils.el ends here
+;;; typst-ts-core.el ends here
