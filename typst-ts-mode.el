@@ -40,7 +40,7 @@
 (require 'typst-ts-watch-mode)
 (require 'typst-ts-edit-indirect)
 (require 'typst-ts-editing)
-
+(require 'typst-ts-lsp)
 (defgroup typst-ts nil
   "Tree Sitter enabled Typst Writing."
   :prefix "typst-ts"
