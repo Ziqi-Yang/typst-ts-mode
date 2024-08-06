@@ -1,11 +1,10 @@
 # Typst Tree-Sitter Mode
 
-Tree Sitter support for Typst. Minimum Emacs version requirement: 29.  
+**NOTE** This package is migrated to [codeberg](https://codeberg.org/meow_king/typst-ts-mode)  
 
-[Discussion on Zulip](https://meow-place.zulipchat.com/)  
-[Tickets](https://todo.sr.ht/~meow_king/typst-ts-mode): Issues, feature requests, etc.  
-[Announce](https://lists.sr.ht/~meow_king/typst-ts-mode-announce) Announcements. Subscribe to it to receive the latest news from `typst-ts-mode`.  
-[Send a Patch](https://lists.sr.ht/~meow_king/typst-ts-mode-dev)  
+The mirror of this package on other git forges like SourceHut or GitHub may not be updated or updated less frequently.  
+
+Tree Sitter support for Typst. Minimum Emacs version requirement: 29.  
 
 ## Requirement
 
