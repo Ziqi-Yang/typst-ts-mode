@@ -6,37 +6,12 @@ The mirror of this package on other git forges like SourceHut or GitHub may not 
 
 Tree Sitter support for Typst. Minimum Emacs version requirement: 29.  
 
-## Requirement
-
-1. Emacs >= 29
-
-2. Latest [Typst](https://github.com/typst/typst).  
-`typst 0.11.0`
-
-3. Tree Sitter grammar for Typst: https://github.com/uben0/tree-sitter-typst  
-   commit: `4610172f312e8ce5184e6882be5ad1a1cd800fbe -  Mon Apr 22 15:13:47 2024 +0200`  
-   Note that `typst-ts-mode` only works with uben0's Typst tree sitter grammar (this one). Other Typst tree sitter grammars like [frozolotl's](https://github.com/frozolotl/tree-sitter-typst) may not work as expected.  
-   To install the grammar, you can execute the following elisp code (once):  
-
-   ``` emacs-lisp
-   (add-to-list 'treesit-language-source-alist
-                '(typst "https://github.com/uben0/tree-sitter-typst"))
-   (treesit-install-language-grammar 'typst)
-   ```
-
-Note there are also [tree sitter modules](https://github.com/casouri/tree-sitter-module), [treesit-auto](https://github.com/renzmann/treesit-auto), [tree-sitter-langs](https://github.com/emacs-tree-sitter/tree-sitter-langs) and [treesit-langs](https://github.com/kiennq/treesit-langs) for you to easily manage your tree sitter modes and grammars. For vanilla solution, here is my [configuration](https://github.com/Ziqi-Yang/.emacs.d/blob/main/languages/l-treesit.el) for reference.
-
 ## Installation
 
-Example configuration.
-``` emacs-lisp
-(use-package typst-ts-mode
-  :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode" :files (:defaults "*.el"))
-  :custom
-  ;; (optional) If you want to ensure your typst tree sitter grammar version is greater than the minimum requirement
-  ;; Note this only check and compare file modification time
-  (typst-ts-mode-grammar-location (expand-file-name "tree-sitter/libtree-sitter-typst.so" user-emacs-directory)))
-```
+See [wiki](https://codeberg.org/meow_king/typst-ts-mode/wiki/Installation)
+
+
+(Document is currently under construction)
 
 ## Keys
 
