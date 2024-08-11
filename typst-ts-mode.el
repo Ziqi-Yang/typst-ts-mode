@@ -108,7 +108,7 @@ Like this:
  (setq typst-ts-mode-font-lock-rules
         (append
          (typst-ts-mode-font-lock-rules)
-         \='(
+          \='(
            :language typst
            :type custom
            ((el-psy-kongaroo) @el-psy-kongaroo))))
@@ -581,7 +581,7 @@ It should hold the originally value of `treesit-indent-function'.")
 (defun typst-ts-mode-indent (node parent bol)
   "Indent function for `treesit-indent-function'.
 This function basically call `typst-ts-mode-indent-function' (i.e. the original
-`treesit-indent-function' to indent), and then it checks whether the current
+`treesit-indent-function')  to indent, and then it checks whether the current
 line has a local parser (i.e. raw block with highlight on).  If it has, we
 add offset to the line to match the indentation of raw block label.
 NODE, PARENT and BOL see `treesit-indent-function'."
@@ -752,6 +752,16 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
     (add-hook 'post-self-insert-hook
               'typst-ts-mode-electric-pair-open-newline-between-pairs-psif
               t))
+
+  ;; Set Compile Command
+  (ignore-errors
+    (unless compile-command
+      (setq-local
+       compile-command
+       (format "%s compile %s %s"
+               typst-ts-compile-executable-location
+               (file-name-nondirectory buffer-file-name)
+               typst-ts-compile-options))))
   
   ;; it seems like the following code only works after-hook
   (when (and
@@ -821,14 +831,13 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
                  typst-ts-mode--imenu-name-function)
                 ("Headings" "^heading$" nil typst-ts-mode--imenu-name-function)))
 
-  ;; Compile Command
-  (ignore-errors
-    (setq-local
-     compile-command
-     (format "%s compile %s %s"
-             typst-ts-compile-executable-location
-             (file-name-nondirectory buffer-file-name)
-             typst-ts-compile-options)))
+  (setq-local treesit-defun-type-regexp
+              (regexp-opt '("let" "math")))
+  
+  ;; treesit-defun-name-function
+
+  ;; (setq-local treesit-thing-settings
+  ;;             `((typst ())))
 
   (when (>= emacs-major-version 30)
     (if (not typst-ts-mode-enable-raw-blocks-highlight)
