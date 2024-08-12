@@ -461,30 +461,6 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
        (string-match-p typst-ts-mode--container-node-types-regexp gp-node-type)
        (equal "section" ggp-node-type)))))
 
-(defun typst-ts-mode-indent--raw-block-blob-anchor (_node parent bol)
-  "Get the correct anchor for raw block blob.
-Please make sure the passed in NODE, PARENT and BOL is nil, blob and raw_blck.
-Used in `typst-ts-mode-indent-rules'."
-  (let* ((prev-line-bol
-          (save-excursion
-            (forward-line -1)
-            (back-to-indentation)
-            (point)))
-         (prev-line-node
-          (treesit-node-at prev-line-bol))
-         (prev-line-node-type (treesit-node-type prev-line-node))
-         (bol-col
-          (typst-ts-mode-column-at-pos bol))
-         (raw-block-bol
-          (typst-ts-core-get-node-bol (treesit-node-parent parent)))
-         (raw-block-bol-col
-          (typst-ts-mode-column-at-pos raw-block-bol)))
-    (if (equal "blob" prev-line-node-type)
-        (if (> raw-block-bol-col bol-col)
-            raw-block-bol
-          bol)
-      prev-line-bol)))
-
 (defvar typst-ts-mode-indent-rules
   ;; debug tips:
   ;; use `typst-ts/util/setup-indent-debug-environment' function in `side/utils.el'
@@ -551,7 +527,10 @@ Used in `typst-ts-mode-indent-rules'."
      ;; raw block
      ;; whether normally or in insertion, the current node is always nil...
      ((n-p-gp nil "blob" "raw_blck")
-      typst-ts-mode-indent--raw-block-blob-anchor 0)
+      no-indent 0)
+     
+     ((match "```" "raw_blck" nil 2 3 )
+      parent-bol 0)
 
      ;; inside container && container is direct child of "section" (headline)
      (typst-ts-mode-indent--no-node-section-container-p
@@ -573,35 +552,6 @@ Used in `typst-ts-mode-indent-rules'."
      (catch-all prev-line 0)))
   "Tree-sitter indent rules for `rust-ts-mode'.")
 
-(defvar typst-ts-mode-indent-function nil
-  "This variable shouldn't be customized by user.
-It should hold the originally value of `treesit-indent-function'.")
-
-(defun typst-ts-mode-indent (node parent bol)
-  "Indent function for `treesit-indent-function'.
-This function basically call `typst-ts-mode-indent-function' (i.e. the original
-`treesit-indent-function')  to indent, and then it checks whether the current
-line has a local parser (i.e. raw block with highlight on).  If it has, we
-add offset to the line to match the indentation of raw block label.
-NODE, PARENT and BOL see `treesit-indent-function'."
-  (unless typst-ts-mode-indent-function
-    (error "Variable `typst-ts-mode-indent-function' shouldn't be null!"))
-  (let ((res (funcall typst-ts-mode-indent-function node parent bol)))
-    ;; if it is a highlighted raw block region (i.e. contains at least one local parser)
-    (when (typst-ts-core-local-parsers-at (treesit-node-start node))
-      ;; when there is no matching rules
-      (unless (car res)
-        (setcar res bol)
-        (setcdr res 0))
-      (let* ((blob_node (treesit-node-at bol 'typst))
-             (raw_block_node (treesit-node-parent blob_node))
-             (raw_block_bol (typst-ts-core-get-node-bol raw_block_node))
-             (raw_block_bol_column (typst-ts-mode-column-at-pos raw_block_bol))
-             (res-column (+ (typst-ts-mode-column-at-pos (car res)) (cdr res))))
-        (when (> raw_block_bol_column res-column)
-          ;; (message "%s %s %s" res raw_block_bol_column res-column)
-          (setcar res raw_block_bol))))
-    res))
 
 (defun typst-ts-mode-comment-setup()
   "Setup comment related stuffs for `typst-ts-mode'."
@@ -665,26 +615,6 @@ FILE: file path for the result compile file."
     (define-key map (kbd "TAB") #'typst-ts-mode-cycle)
     (define-key map (kbd "C-c '") #'typst-ts-edit-indirect)
     map))
-
-(defun typst-ts-mode--language-at-point (pos)
-  "Get the treesit language should be used at POS.
-See `treesit-language-at-point-function'."
-  (let ((lang
-         (when-let* ((cur-node (treesit-node-at pos 'typst))
-                     ((equal (treesit-node-type cur-node) "blob"))
-                     (parent-node (treesit-node-parent cur-node))
-                     ((equal (treesit-node-type
-                              (treesit-node-parent cur-node)) "raw_blck"))
-                     (lang-node
-                      (treesit-node-prev-sibling cur-node))
-                     ((equal (treesit-node-type lang-node) "ident")))
-           (gethash
-            (downcase (treesit-node-text lang-node))
-            typst-ts-els-tag-lang-map))))
-    (if lang
-        (if (treesit-ready-p lang t) lang nil)
-      'typst)))
-
 
 (defun typst-ts-mode-indent-line-function ()
   "A simple wrapper of `treesit-indent' for handle indentation edge cases.
@@ -805,9 +735,6 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   ;;             `((typst ())))
 
 
-  (setq-local treesit-language-at-point-function
-              'typst-ts-mode--language-at-point)
-
   ;; Outline
   (if nil  ; (>= emacs-major-version 30)
       ;; FIXME maybe it's a upstream bug. Circle top-level section will cycle all the content below
@@ -819,8 +746,6 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   ;; TODO add it to after-hook
   (outline-minor-mode t)
 
-  (setq-local typst-ts-mode-indent-function treesit-indent-function
-              treesit-indent-function 'typst-ts-mode-indent)
   (treesit-major-mode-setup)
 
   (setq-local indent-line-function #'typst-ts-mode-indent-line-function))

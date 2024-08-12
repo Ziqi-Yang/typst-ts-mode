@@ -34,20 +34,6 @@
     (back-to-indentation)
     (point)))
 
-(defun typst-ts-core-parser-list (&optional buffer language)
-  "An comptibility function for Emacs 29's `treesit-parser-list' function.
-BUFFER defaults to the current buffer.  If that buffer is an indirect
-buffer, its base buffer is used instead.  That is, indirect buffers
-use their base buffer's parsers.
-
-If LANGUAGE is non-nil, only return parsers for that language."
-  (if (>= emacs-major-version 30)
-      (funcall #'treesit-parser-list buffer language)
-    (let ((parsers (treesit-parser-list buffer)))
-      (seq-filter
-       (lambda (parser)
-         (eq (treesit-parser-language parser) language))
-       parsers))))
 
 ;; code is from treesit.el inside Emacs Source
 (defun typst-ts-core-local-parsers-at (&optional pos language with-host)
@@ -58,23 +44,6 @@ POS LANGUAGE WITH-HOST."
       (funcall #'treesit-local-parsers-at pos language with-host)
     (let ((res nil))
       (dolist (ov (overlays-at (or pos (point))))
-        (when-let ((parser (overlay-get ov 'treesit-parser))
-                   (host-parser (overlay-get ov 'treesit-host-parser)))
-          (when (or (null language)
-                    (eq (treesit-parser-language parser)
-                        language))
-            (push (if with-host (cons parser host-parser) parser) res))))
-      (nreverse res))))
-
-;; code is from treesit.el inside Emacs Source
-(defun typst-ts-core-local-parsers-on (&optional beg end language with-host)
-  "Return all the local parsers between BEG END.
-It's a copy of Emacs 30's `treesit-local-parsers-on' function.
-BEG END LANGUAGE WITH-HOST."
-  (if (fboundp 'treesit-local-parsers-on)
-      (funcall #'treesit-local-parsers-on beg end language with-host)
-    (let ((res nil))
-      (dolist (ov (overlays-in (or beg (point-min)) (or end (point-max))))
         (when-let ((parser (overlay-get ov 'treesit-parser))
                    (host-parser (overlay-get ov 'treesit-host-parser)))
           (when (or (null language)

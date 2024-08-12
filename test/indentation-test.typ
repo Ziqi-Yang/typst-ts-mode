@@ -50,7 +50,7 @@ fn main() {
   fn main() {
 
   }
-  ``` // FIXME: should be 0 offset
+```
 
 = Script
 #if 1 < 2 [
