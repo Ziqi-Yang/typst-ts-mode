@@ -1,5 +1,5 @@
 ;;; typst-ts-watch-mode.el --- Watch typst file  -*- lexical-binding: t; -*-
-;; Copyright (C) 2023 The typst-ts-mode Project Contributors
+;; Copyright (C) 2023-2024 The typst-ts-mode Project Contributors
 
 ;; This file is NOT part of Emacs.
 ;; This program is free software: you can redistribute it and/or modify

@@ -1,5 +1,5 @@
 ;;; typst-ts-mode.el --- Tree Sitter support for Typst  -*- lexical-binding: t; -*-
-;; Copyright (C) 2023 The typst-ts-mode Project Contributors
+;; Copyright (C) 2023-2024 The typst-ts-mode Project Contributors
 
 ;; Version: 0.10.0
 ;; Author: Ziqi Yang <mr.meowking@anche.no>
