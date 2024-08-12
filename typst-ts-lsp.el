@@ -32,11 +32,13 @@
   :group 'typst-ts-lsp
   :type 'file)
 
+;;;###autoload
 (add-to-list 'eglot-server-programs
              `((typst-ts-mode)
                .
                ,(eglot-alternatives `(,typst-ts-lsp-download-path "tinymist"))))
 
+;;;###autoload
 (defun typst-ts-lsp-download-binary ()
   "Download latest tinymist binary to `typst-ts-lsp-download-path'.
 Will override old versions."
