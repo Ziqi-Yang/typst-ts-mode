@@ -76,16 +76,9 @@ be noticeably affected probably."
                  (const :tag "Maximum level" max))
   :group 'typst-ts)
 
-;; TODO currently set nil as default, since it still needs refinement
 (defcustom typst-ts-mode-enable-raw-blocks-highlight nil
   "Whether to enable raw block highlighting.
 NOTE: currently only support Emacs 30 (master branch)."
-  :type 'boolean
-  :group 'typst-ts)
-
-(defcustom typst-ts-mode-highlight-raw-blocks-at-startup nil
-  "Whether to highlight raw blocks at *mode startup*.
-Note: this may take some time for documents with lot of raw blocks."
   :type 'boolean
   :group 'typst-ts)
 
@@ -153,23 +146,29 @@ BTW, if you want to enable/disable specific font lock feature, please change
 (defvar typst-ts-mode-font-lock-rules-math-extended nil
   "See variable `typst-ts-mode-font-lock-rules'.")
 
-(defun typst-ts-mode-highlight-raw-block-fn (node _override _start _end)
+(defun typst-ts-mode-highlight-raw-block-fn (blob-node _override _start _end)
   "A function used in function `typst-ts-mode-font-lock-rules'.
 This function assign `typst-ts-markup-rawblock-blob-face' to those raw block
 whose language cannot be found or be loaded.
-NODE."
-  (let ((ns (treesit-node-start node))
-        (ne (treesit-node-end node))
-        (lang-node (treesit-node-prev-sibling node))
-        lang)
-    (if (or (< emacs-major-version 30)
-            (not (equal (treesit-node-type lang-node) "ident")))
-        (put-text-property ns ne 'face 'typst-ts-markup-rawblock-blob-face)
+BLOB-NODE."
+  (let* ((bns (treesit-node-start blob-node))
+         (bne (treesit-node-end blob-node))
+         (lang-node? (treesit-node-prev-sibling blob-node))
+         lang-node lang lang-mode)
+    
+    (when (equal (treesit-node-type lang-node?) "ident")
+      (setq lang-node lang-node?))
+    
+    (when lang-node
       (setq lang (gethash
                   (downcase (treesit-node-text lang-node))
                   typst-ts-els-tag-lang-map))
-      (unless (and lang (treesit-ready-p lang t))
-        (put-text-property ns ne 'face 'typst-ts-markup-rawblock-blob-face)))))
+      (when lang
+        (setq lang-mode (typst-ts-els-get-lang-mode (symbol-name lang)))))
+    
+    (if lang-mode
+        (typst-ts-els-fontify-raw-block lang-mode bns bne)
+      (put-text-property bns bne 'face 'typst-ts-markup-rawblock-blob-face))))
 
 (defun typst-ts-mode-font-lock-rules ()
   ;; use function `typst-ts/util/setup-fontification-debug-environment' in
@@ -686,17 +685,6 @@ See `treesit-language-at-point-function'."
         (if (treesit-ready-p lang t) lang nil)
       'typst)))
 
-(defun typst-ts-mode--treesit-range-rules (langs)
-  ;; from vimscript-ts-mode.el
-  "Create range captures for LANGS."
-  (cl-loop for lang in langs
-           when (treesit-ready-p lang)
-           nconc
-           (condition-case err
-               (typst-ts-els--treesit-range-rules lang)
-             (error
-              (message "%s" (error-message-string err))
-              nil))))
 
 (defun typst-ts-mode-indent-line-function ()
   "A simple wrapper of `treesit-indent' for handle indentation edge cases.
@@ -762,25 +750,6 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
                typst-ts-compile-executable-location
                (file-name-nondirectory buffer-file-name)
                typst-ts-compile-options))))
-  
-  ;; it seems like the following code only works after-hook
-  (when (and
-         (>= emacs-major-version 30)
-         typst-ts-mode-enable-raw-blocks-highlight
-         typst-ts-mode-highlight-raw-blocks-at-startup)
-    ;; since currently local parsers haven't created, we cannot only load
-    ;; those necessary parsers
-    (cl-loop for setting in typst-ts-embedding-lang-settings
-             for lang = (car setting)
-             for config = (cdr setting)
-             when (treesit-ready-p lang t)
-             do
-             (unwind-protect
-                 (typst-ts-els-merge-settings config)
-               ;; some feature like cmake-ts-mode will create a parser when
-               ;; the feature is required, so we need to clean thease parsers
-               (mapc #'treesit-parser-delete (typst-ts-core-parser-list nil lang))
-               (add-to-list 'typst-ts-els--include-languages lang))))
 
   (typst-ts-mode-check-grammar-version))
 
@@ -793,13 +762,9 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   (typst-ts-mode-after-hook-function)
 
   (unless (treesit-ready-p 'typst)
-    (error "Tree-sitter for Typst isn't available"))
+    (user-error "Tree-sitter for Typst isn't available"))
 
-  (let ((parser (treesit-parser-create 'typst)))
-    (when typst-ts-mode-enable-raw-blocks-highlight
-      (treesit-parser-add-notifier
-       parser
-       'typst-ts-els-include-dynamically)))
+  (setq-local treesit-primary-parser (treesit-parser-create 'typst))
 
   ;; Comments.
   (typst-ts-mode-comment-setup)
@@ -839,19 +804,9 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   ;; (setq-local treesit-thing-settings
   ;;             `((typst ())))
 
-  (when (>= emacs-major-version 30)
-    (if (not typst-ts-mode-enable-raw-blocks-highlight)
-        (setq-local treesit-range-settings
-                    (typst-ts-mode--treesit-range-rules '(typst)))
-      (setq-local treesit-language-at-point-function
-                  'typst-ts-mode--language-at-point)
-      (setq-local treesit-range-settings
-                  (typst-ts-mode--treesit-range-rules
-                   (append
-                    (cl-loop for setting in typst-ts-embedding-lang-settings
-                             when (treesit-ready-p (car setting) t)
-                             collect (car setting))
-                    '(typst))))))
+
+  (setq-local treesit-language-at-point-function
+              'typst-ts-mode--language-at-point)
 
   ;; Outline
   (if nil  ; (>= emacs-major-version 30)
@@ -863,7 +818,7 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   ;; provides outline ellipsis
   ;; TODO add it to after-hook
   (outline-minor-mode t)
-  
+
   (setq-local typst-ts-mode-indent-function treesit-indent-function
               treesit-indent-function 'typst-ts-mode-indent)
   (treesit-major-mode-setup)
