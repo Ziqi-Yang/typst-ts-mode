@@ -600,21 +600,22 @@ FILE: file path for the result compile file."
   (browse-url file))
 
 ;;;###autoload
-(defvar typst-ts-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c c") #'typst-ts-compile-and-preview)
-    (define-key map (kbd "C-c C-c C") #'typst-ts-compile)
-    (define-key map (kbd "C-c C-c w") #'typst-ts-watch-mode)
-    (define-key map (kbd "C-c C-c p") #'typst-ts-mode-preview)
-    (define-key map (kbd "M-<left>") #'typst-ts-mode-heading-decrease)
-    (define-key map (kbd "M-<right>") #'typst-ts-mode-heading-increase)
-    (define-key map (kbd "M-<down>") #'typst-ts-mode-heading-down)
-    (define-key map (kbd "M-<up>") #'typst-ts-mode-heading-up)
-    (define-key map (kbd "M-<return>") #'typst-ts-mode-meta-return)
-    (define-key map (kbd "<return>") #'typst-ts-mode-return)
-    (define-key map (kbd "TAB") #'typst-ts-mode-cycle)
-    (define-key map (kbd "C-c '") #'typst-ts-edit-indirect)
-    map))
+(defvar-keymap typst-ts-mode-map
+  "C-c C-c c" #'typst-ts-compile-and-preview
+  "C-c C-c C" #'typst-ts-compile
+  "C-c C-c w" #'typst-ts-watch-mode
+  "C-c C-c p" #'typst-ts-mode-preview
+  
+  "M-<left>" #'typst-ts-mode-heading-decrease
+  "M-<right>" #'typst-ts-mode-heading-increase
+  "M-<down>" #'typst-ts-mode-heading-down
+  "M-<up>" #'typst-ts-mode-heading-up
+  "M-<return>" #'typst-ts-mode-meta-return
+  
+  "TAB" #'typst-ts-mode-cycle
+  "RET" #'typst-ts-mode-return
+  "C-c '" #'typst-ts-edit-indirect)
+
 
 (defun typst-ts-mode-indent-line-function ()
   "A simple wrapper of `treesit-indent' for handle indentation edge cases.
@@ -690,7 +691,7 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   :syntax-table typst-ts-mode-syntax-table
   :after-hook
   (typst-ts-mode-after-hook-function)
-
+  
   (unless (treesit-ready-p 'typst)
     (user-error "Tree-sitter for Typst isn't available"))
 

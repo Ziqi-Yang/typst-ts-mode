@@ -152,16 +152,22 @@ When prefix ARG is non-nil, call global return function."
           ))))
     ;; execute default action if not successful
     (unless (eq execute-result 'success)
-      (let ((global-ret-function
-             (global-key-binding (kbd "RET"))))
-        (if (and current-prefix-arg
-                 (yes-or-no-p
-                  (format
-                   "Execute function `%s' with the given prefix argument?"
-                   global-ret-function)))
-            (call-interactively global-ret-function)
-          (let ((current-prefix-arg nil))
-            (call-interactively global-ret-function)))))))
+      ;; temporary solution for corfu completion
+      ;; see the issue here: https://codeberg.org/meow_king/typst-ts-mode/issues/6
+      (if (and (boundp 'corfu--input) (fboundp 'corfu-insert)
+               corfu--input)
+          (corfu-insert)
+        (let ((global-ret-function
+               (global-key-binding (kbd "RET"))))
+          (if (and current-prefix-arg
+                   (yes-or-no-p
+                    (format
+                     "Execute function `%s' with the given prefix argument?"
+                     global-ret-function)))
+              (call-interactively global-ret-function)
+            (let ((current-prefix-arg nil))
+              (call-interactively global-ret-function)))))))
+  )
 
 (defun typst-ts-mode-insert--item (node)
   "Insert an item after NODE.

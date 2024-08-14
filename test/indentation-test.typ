@@ -5,6 +5,7 @@
 
 // typst-ts-mode-indent-offset: 4
 
+
 #show: cv.with(
     author: "",
     [
