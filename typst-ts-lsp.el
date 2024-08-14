@@ -17,6 +17,14 @@
 
 ;;; Commentary:
 
+;; NOTE we don't provide `eglot-server-programs' configuration here, because
+;; user may have already defined entries before typst-ts-mode load, which will
+;; be override by our provided configuration.  If we want to detect whether
+;; users have their own entries, we can use `eglot--lookup-mode', but the name
+;; of the function means it's an private function and subject to change in the
+;; in the future.
+;; It's better to send a patch to eglot upstream to add the Typst language server.
+
 ;;; Code:
 
 (require 'eglot)
@@ -32,10 +40,6 @@
   :group 'typst-ts-lsp
   :type 'file)
 
-(add-to-list 'eglot-server-programs
-             `((typst-ts-mode)
-               .
-               ,(eglot-alternatives `(,typst-ts-lsp-download-path "tinymist"))))
 
 ;;;###autoload
 (defun typst-ts-lsp-download-binary ()
