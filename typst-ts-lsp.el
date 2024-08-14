@@ -32,7 +32,6 @@
   :group 'typst-ts-lsp
   :type 'file)
 
-;;;###autoload
 (add-to-list 'eglot-server-programs
              `((typst-ts-mode)
                .
