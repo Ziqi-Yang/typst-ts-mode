@@ -16,4 +16,4 @@ Tree Sitter support for [Typst](https://github.com/typst/typst). Minimum Emacs v
 
 ## Co-Maintainer
 
-[Huan Nguyen](https://sr.ht/~huan)
+[@huantn](https://codeberg.org/huantn)
