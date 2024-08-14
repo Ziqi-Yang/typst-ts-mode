@@ -3,6 +3,8 @@
 makem.sh
 \#*\#
 
+.env
+
 # Added by cargo
 
 /target
