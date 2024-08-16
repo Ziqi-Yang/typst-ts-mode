@@ -157,9 +157,7 @@ fn format_tag_lang_hash_table(lang_tags_map: &IndexMap<String, HashSet<String>>)
     format_hash_table(total + 10, &data_str)
 }
 
-// All tree sitter major modes <<<
-// use `typst-ts/util/els/get-all-ts-major-modes' function in `side/utils.el' file
-// ;; "(awk-ts-mode bash-ts-mode bibtex-ts-mode c-ts-mode csharp-ts-mode clojure-ts-mode cmake-ts-mode commonlisp-ts-mode c++-ts-mode css-ts-mode dart-ts-mode dockerfile-ts-mode elixir-ts-mode go-ts-mode go-mod-ts-mode heex-ts-mode html-ts-mode java-ts-mode js-ts-mode json-ts-mode julia-ts-mode kotlin-ts-mode latex-ts-mode lua-ts-mode makefile-ts-mode markdown-ts-mode protobuf-ts-mode python-ts-mode r-ts-mode ruby-ts-mode rust-ts-mode toml-ts-mode tsx-ts-mode typescript-ts-mode typst-ts-mode verilog-ts-mode vhdl-ts-mode yaml-ts-mode ert-results-mode gdb-breakpoints-mode dape-info-breakpoints-mode mermaid-ts-mode)"
+// Most of the tree sitter modes: https://codeberg.org/meow_king/treesit-modes-settings
 
 fn slice_to_hashmap<M, N, K, V>(array: &[(K, V)]) -> HashMap<M, N>
 where
@@ -176,11 +174,11 @@ where
 }
 
 fn get_tag_remap() -> HashMap<String, String> {
-    let map = &[("clisp", "commonlisp")];
+    let map = &[("clisp", "common-lisp")];
     slice_to_hashmap(map)
 }
 
 fn get_identifier_remap() -> HashMap<String, String> {
-    let map = &[("sh", "bash"), ("cs", "c-sharp"), ("c++", "cpp")];
+    let map = &[("sh", "bash"), ("cs", "c-sharp"), ("javascript", "js")];
     slice_to_hashmap(map)
 }
