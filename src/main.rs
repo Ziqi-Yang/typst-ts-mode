@@ -173,11 +173,20 @@ where
     map
 }
 
+// to change single relationship
+// e.g. lisp -> lisp, clisp -> lisp
+// chagne clisp to common-lisp
+// lisp -> lisp, clisp -> common-lisp
 fn get_tag_remap() -> HashMap<String, String> {
-    let map = &[("clisp", "common-lisp")];
+    let map = &[("clisp", "common-lisp"), ("el", "emacs-lisp")];
     slice_to_hashmap(map)
 }
 
+// to change whole relationship
+// e.g.
+// fish -> sh, sh -> sh
+// change sh to bash
+// fish -> bash, sh -> bash
 fn get_identifier_remap() -> HashMap<String, String> {
     let map = &[("sh", "bash"), ("cs", "c-sharp"), ("javascript", "js")];
     slice_to_hashmap(map)

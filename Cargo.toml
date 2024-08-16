@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 indexmap = "2.1.0"
-two-face = { version = "0.3.0", default-features = false, features = ["syntect-fancy"] }
+two-face = { version = "0.4.0", default-features = false, features = ["syntect-fancy"] }
