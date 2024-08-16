@@ -550,7 +550,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
 
      ;; example: (item (text) (text) (text)) when `(text)' is in different line
      (catch-all prev-line 0)))
-  "Tree-sitter indent rules for `rust-ts-mode'.")
+  "Tree-sitter indent rules for `typst-ts-mode'.")
 
 
 (defun typst-ts-mode-comment-setup()
