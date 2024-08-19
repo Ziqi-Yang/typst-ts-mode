@@ -41,6 +41,8 @@
 (require 'typst-ts-edit-indirect)
 (require 'typst-ts-editing)
 (require 'typst-ts-lsp)
+(require 'typst-ts-misc-commands)
+
 (defgroup typst-ts nil
   "Tree Sitter enabled Typst Writing."
   :prefix "typst-ts"
