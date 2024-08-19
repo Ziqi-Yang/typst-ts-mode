@@ -294,13 +294,15 @@ If you want to customize the rules, please customize the same name variable
       ,(if typst-ts-mode-font-lock-rules-markup-standard
            typst-ts-mode-font-lock-rules-markup-standard
          '((linebreak) @typst-ts-markup-linebreak-face
+           (url) @typst-ts-markup-url-face
            (quote) @typst-ts-markup-quote-face))
 
       :language typst
       :feature markup-extended
       ,(if typst-ts-mode-font-lock-rules-markup-extended
            typst-ts-mode-font-lock-rules-markup-extended
-         '((url) @typst-ts-markup-url-face))
+         ;; still provide this option so that user have 3 levels of markup fontication
+         '(nil))
 
       ;; please note that some feature there also in the math mode
       :language typst
