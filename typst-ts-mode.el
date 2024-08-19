@@ -613,6 +613,11 @@ FILE: file path for the result compile file."
   "M-<up>" #'typst-ts-mode-heading-up
   "M-<return>" #'typst-ts-mode-meta-return
   
+  ;; don't bind <return>
+  ;; Binding a command to "<return>" is generally a bug.
+  ;; Emacs will first look for a binding for `return` and if it finds one
+  ;; it'll use it in preference to a binding for `RET`, regardless of the
+  ;; relative precedence of the keymaps involved.
   "TAB" #'typst-ts-mode-cycle
   "RET" #'typst-ts-mode-return
   "C-c '" #'typst-ts-edit-indirect)
