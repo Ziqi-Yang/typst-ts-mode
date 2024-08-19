@@ -17,6 +17,9 @@
 
 ;;; Commentary:
 
+;; For item node, it's recommended to use `+' rather than `<num>.'.  Operations
+;; for `<num>.' may not be implemented comprehensively.
+
 ;;; Code:
 
 (require 'outline)
@@ -122,7 +125,7 @@ When prefix ARG is non-nil, call global return function."
             ((and (eolp)
                   (setq node (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
                   (equal (treesit-node-type node) "item")
-                  (not (string= (typst-ts-core-node-get node '((child -1 nil) (type))) "linebreak")))
+                  (length= (treesit-node-children node) 2))
              (if (> (treesit-node-child-count node) 1)
                  (typst-ts-mode-insert--item node)
                ;; no text means delete the item on current line
