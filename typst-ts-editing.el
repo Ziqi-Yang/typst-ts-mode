@@ -239,10 +239,9 @@ When there is no section it will insert a heading below point."
                           (goto-char prev-nonwhite-pos)
                           (back-to-indentation)
                           (point)))
-                       (prev-nonwhite-line-heading-node
-                        (treesit-node-at prev-nonwhite-line-bol))
-                       (prev-nonwhite-line-top-node (treesit-node-parent
-                                                     prev-nonwhite-line-heading-node))
+                       (prev-nonwhite-line-top-node
+                        (treesit-node-parent
+                         (treesit-node-at prev-nonwhite-line-bol)))
                        (cur-line-bol-column (typst-ts-core-column-at-pos cur-line-bol))
                        (prev-nonwhite-line-bol-column
                         (typst-ts-core-column-at-pos prev-nonwhite-line-bol)))
@@ -251,7 +250,6 @@ When there is no section it will insert a heading below point."
               ;; 2. psy| <- can toggle indent
               ((and
                 (equal (treesit-node-type prev-nonwhite-line-top-node) "item")
-                (equal (treesit-node-type prev-nonwhite-line-heading-node) "-")
                 ;; previous nonwhite-line ending is not '\' character
                 (not (equal (treesit-node-type prev-nonwhite-line-node) "linebreak")))
                ;; TODO cycle all its children
