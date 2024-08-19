@@ -27,6 +27,12 @@
 ;; code from Emacs binary
 (declare-function treesit-parser-list "treesit" t t)
 
+(defun typst-ts-mode-column-at-pos (point)
+  "Get the column at position POINT."
+  (save-excursion
+    (goto-char point)
+    (current-column)))
+
 (defun typst-ts-core-get-node-bol (node)
   "Get the NODE's indentation offset (at node beginning)."
   (save-excursion

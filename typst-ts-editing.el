@@ -127,29 +127,31 @@ Using ARG argument will ignore the context and it will insert a heading instead.
 When prefix ARG is non-nil, call global return function."
   (interactive "P")
   (let (execute-result node)
-    (setq
-     execute-result
-     (catch 'execute-result
-       (when-let* ((cur-pos (point))
-                   (cur-node (treesit-node-at cur-pos))
-                   (cur-node-type (treesit-node-type cur-node))
-                   (parent-node (treesit-node-parent cur-node))  ; could be nil
-                   (parent-node-type (treesit-node-type parent-node)))
-         (cond
-          (arg (throw 'execute-result 'default))
-          ;; on item node end
-          ((and (eolp)
-                (setq node (typst-ts-mode--item-on-line-p))
-                (string= (treesit-node-type node) "item")
-                (not (string= (typst-ts-core-node-get node '((child -1 nil) (type))) "linebreak")))
-           (if (> (treesit-node-child-count node) 1)
-               (typst-ts-mode-insert--item node)
-             ;; no text means delete the item on current line
-             (beginning-of-line)
-             (kill-line)
-             (indent-according-to-mode))
-           (throw 'execute-result 'success))
-          ))))
+    (unless current-prefix-arg
+      (setq
+       execute-result
+       (catch 'execute-result
+         (when-let* ((cur-pos (point))
+                     (cur-node (treesit-node-at cur-pos))
+                     (cur-node-type (treesit-node-type cur-node))
+                     (parent-node (treesit-node-parent cur-node))  ; could be nil
+                     (parent-node-type (treesit-node-type parent-node)))
+           ;; (message "%s %s" cur-node parent-node)
+           (cond
+            (arg (throw 'execute-result 'default))
+            ;; on item node end
+            ((and (eolp)
+                  (setq node (typst-ts-mode--item-on-line-p))
+                  (string= (treesit-node-type node) "item")
+                  (not (string= (typst-ts-core-node-get node '((child -1 nil) (type))) "linebreak")))
+             (if (> (treesit-node-child-count node) 1)
+                 (typst-ts-mode-insert--item node)
+               ;; no text means delete the item on current line
+               (beginning-of-line)
+               (kill-line)
+               (indent-according-to-mode))
+             (throw 'execute-result 'success))
+            )))))
     ;; execute default action if not successful
     (unless (eq execute-result 'success)
       ;; temporary solution for corfu completion
@@ -159,15 +161,15 @@ When prefix ARG is non-nil, call global return function."
           (corfu-insert)
         (let ((global-ret-function
                (global-key-binding (kbd "RET"))))
-          (if (and current-prefix-arg
-                   (yes-or-no-p
-                    (format
-                     "Execute function `%s' with the given prefix argument?"
-                     global-ret-function)))
+          (if (not current-prefix-arg)
               (call-interactively global-ret-function)
-            (let ((current-prefix-arg nil))
-              (call-interactively global-ret-function)))))))
-  )
+            (if (yes-or-no-p
+                 (format
+                  "Execute function `%s' without/with the given prefix argument?"
+                  global-ret-function))
+                (let ((current-prefix-arg nil))
+                  (call-interactively global-ret-function))
+              (call-interactively global-ret-function))))))))
 
 (defun typst-ts-mode-insert--item (node)
   "Insert an item after NODE.
@@ -183,7 +185,7 @@ This function respects indentation."
     (goto-char item-end)
     (newline)
     (indent-line-to node-bol-column)
-    (insert (if (= item-number 0)
+    (insert (if (= item-number 0)  ; not a number type
                 item-type
               (concat (number-to-string (1+ item-number)) "."))
             " ")))
@@ -213,11 +215,6 @@ When there is no section it will insert a heading below point."
     (insert heading-level " ")
     (indent-according-to-mode)))
 
-(defun typst-ts-mode-column-at-pos (point)
-  "Get the column at position POINT."
-  (save-excursion
-    (goto-char point)
-    (current-column)))
 
 ;;;###autoload
 (defun typst-ts-mode-cycle (&optional _arg)
