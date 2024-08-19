@@ -44,6 +44,18 @@
     (async-shell-command
      (concat "pandoc -o " output-file-name " " file-name))))
 
+(defun typst-ts-mc-search-typst-symbol ()
+  (interactive)
+  (browse-url "https://typst.app/docs/reference/symbols/sym/"))
+
+(defun typst-ts-mc-recognize-typst-symbol ()
+  (interactive)
+  (browse-url "https://detypify.quarticcat.com/"))
+
+(defun typst-ts-mc-search-package ()
+  (interactive)
+  (browse-url "https://typst.app/universe"))
+
 
 (provide 'typst-ts-misc-commands)
 
