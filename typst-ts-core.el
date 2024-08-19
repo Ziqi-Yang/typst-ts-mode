@@ -35,23 +35,6 @@
     (point)))
 
 
-;; code is from treesit.el inside Emacs Source
-(defun typst-ts-core-local-parsers-at (&optional pos language with-host)
-  "Return all the local parsers at POS.
-It's a copy of Emacs 30's `treesit-local-parsers-at' function.
-POS LANGUAGE WITH-HOST."
-  (if (fboundp 'treesit-local-parsers-at)
-      (funcall #'treesit-local-parsers-at pos language with-host)
-    (let ((res nil))
-      (dolist (ov (overlays-at (or pos (point))))
-        (when-let ((parser (overlay-get ov 'treesit-parser))
-                   (host-parser (overlay-get ov 'treesit-host-parser)))
-          (when (or (null language)
-                    (eq (treesit-parser-language parser)
-                        language))
-            (push (if with-host (cons parser host-parser) parser) res))))
-      (nreverse res))))
-
 (defun typst-ts-core-node-get (node instructions)
   "Get things from NODE by INSTRUCTIONS.
 It's a copy of Emacs 30's `treesit-node-get' function."
