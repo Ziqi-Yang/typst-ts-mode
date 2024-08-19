@@ -136,22 +136,18 @@ When prefix ARG is non-nil, call global return function."
             )))))
     ;; execute default action if not successful
     (unless (eq execute-result 'success)
-      ;; temporary solution for corfu completion
-      ;; see the issue here: https://codeberg.org/meow_king/typst-ts-mode/issues/6
-      (if (and (boundp 'corfu--input) (fboundp 'corfu-insert)
-               corfu--input)
-          (corfu-insert)
-        (let ((global-ret-function
-               (global-key-binding (kbd "RET"))))
-          (if (not current-prefix-arg)
-              (call-interactively global-ret-function)
-            (if (yes-or-no-p
-                 (format
-                  "Execute function `%s' without/with the given prefix argument?"
-                  global-ret-function))
-                (let ((current-prefix-arg nil))
-                  (call-interactively global-ret-function))
-              (call-interactively global-ret-function))))))))
+      ;; we only need to look for global keybinding, see `(elisp) Active Keymaps'
+      (let ((global-ret-function
+             (global-key-binding (kbd "RET"))))
+        (if (not current-prefix-arg)
+            (call-interactively global-ret-function)
+          (if (yes-or-no-p
+               (format
+                "Execute function `%s' without/with the given prefix argument?"
+                global-ret-function))
+              (let ((current-prefix-arg nil))
+                (call-interactively global-ret-function))
+            (call-interactively global-ret-function)))))))
 
 (defun typst-ts-mode-insert--item (node)
   "Insert an item after NODE.
