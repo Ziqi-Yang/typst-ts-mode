@@ -1,4 +1,4 @@
-;;; typst-ts-misc-commands.el --- core functions for typst-ts-mode -*- lexical-binding: t; -*-
+;;; typst-ts-misc-commands.el --- Miscellaneous commands for typst-ts-mode -*- lexical-binding: t; -*-
 ;; Copyright (C) 2023-2024 The typst-ts-mode Project Contributors
 
 ;; This file is NOT part of Emacs.
@@ -21,10 +21,19 @@
 
 ;;; Code:
 
+(require 'treesit)
+
 ;; (defgroup typst-ts-mc nil
 ;;   "Typst ts miscellaneous commands."
 ;;   :prefix "typst-ts-misc-commands"
 ;;   :group 'typst-ts)
+
+(defun typst-ts-mc-install-grammar ()
+  (interactive)
+  (let ((treesit-language-source-alist treesit-language-source-alist))
+    (add-to-list 'treesit-language-source-alist
+                 '(typst "https://github.com/Ziqi-Yang/tree-sitter-typst"))
+    (treesit-install-language-grammar 'typst)))
 
 
 (defun typst-ts-mc-export-to-markdown ()

@@ -42,6 +42,7 @@
 (require 'typst-ts-editing)
 (require 'typst-ts-lsp)
 (require 'typst-ts-misc-commands)
+(require 'typst-ts-transient)
 
 (defgroup typst-ts nil
   "Tree Sitter enabled Typst Writing."
@@ -756,12 +757,6 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.typ\\'" . typst-ts-mode))
 
-(defun typst-ts-mode-install-grammar ()
-  (interactive)
-  (let ((treesit-language-source-alist treesit-language-source-alist))
-    (add-to-list 'treesit-language-source-alist
-                 '(typst "https://github.com/Ziqi-Yang/tree-sitter-typst"))
-    (treesit-install-language-grammar 'typst)))
 
 (provide 'typst-ts-mode)
 
