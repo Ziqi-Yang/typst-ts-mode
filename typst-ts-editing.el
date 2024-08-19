@@ -88,33 +88,12 @@ the `GLOBAL-MAP' (example: `right-word')."
       (call-interactively
        (keymap-lookup global-map (substitute-command-keys (cdr call-me/string)))))))
 
-(defun typst-ts-mode--item-on-line-p ()
-  "Does the current line have an item node?
-Return the node when yes otherwise
-return the node that is one character left from the end of line."
-  (treesit-node-parent
-   (treesit-node-at
-    (save-excursion
-      ;; starting from the beginning because line could be 1. wow.
-      (beginning-of-line)
-      (condition-case nil
-          (progn
-            (search-forward-regexp (rx (or "+" "-" "."))
-                                   (pos-eol)
-                                   nil
-                                   nil)
-            (left-char))
-        (search-failed
-         ;; need to go to the end of line and then one left because end of line is the next node
-         (goto-char (1- (pos-eol)))))
-      (point)))))
-
 (defun typst-ts-mode-meta-return (&optional arg)
   "Depending on context, insert a heading or insert an item.
 The new heading is created after the ending of current heading.
 Using ARG argument will ignore the context and it will insert a heading instead."
   (interactive "P")
-  (let ((node (typst-ts-mode--item-on-line-p)))
+  (let ((node (typst-ts-core-get-parent-of-node-at-bol-nonwhite)))
     (cond
      (arg (typst-ts-mode-insert--heading nil))
      ((string= (treesit-node-type node) "item")
@@ -141,8 +120,8 @@ When prefix ARG is non-nil, call global return function."
             (arg (throw 'execute-result 'default))
             ;; on item node end
             ((and (eolp)
-                  (setq node (typst-ts-mode--item-on-line-p))
-                  (string= (treesit-node-type node) "item")
+                  (setq node (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
+                  (equal (treesit-node-type node) "item")
                   (not (string= (typst-ts-core-node-get node '((child -1 nil) (type))) "linebreak")))
              (if (> (treesit-node-child-count node) 1)
                  (typst-ts-mode-insert--item node)
@@ -180,7 +159,7 @@ This function respects indentation."
 	                   (treesit-node-child node 0)))
          (item-number (string-to-number item-type))
          (item-end (treesit-node-end node))
-         (node-bol-column (typst-ts-mode-column-at-pos
+         (node-bol-column (typst-ts-core-column-at-pos
                            (typst-ts-core-get-node-bol node))))
     (goto-char item-end)
     (newline)
@@ -264,9 +243,9 @@ When there is no section it will insert a heading below point."
                         (treesit-node-at prev-nonwhite-line-bol))
                        (prev-nonwhite-line-top-node (treesit-node-parent
                                                      prev-nonwhite-line-heading-node))
-                       (cur-line-bol-column (typst-ts-mode-column-at-pos cur-line-bol))
+                       (cur-line-bol-column (typst-ts-core-column-at-pos cur-line-bol))
                        (prev-nonwhite-line-bol-column
-                        (typst-ts-mode-column-at-pos prev-nonwhite-line-bol)))
+                        (typst-ts-core-column-at-pos prev-nonwhite-line-bol)))
              (cond
               ;; 1. el
               ;; 2. psy| <- can toggle indent

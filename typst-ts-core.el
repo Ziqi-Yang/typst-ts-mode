@@ -27,7 +27,7 @@
 ;; code from Emacs binary
 (declare-function treesit-parser-list "treesit" t t)
 
-(defun typst-ts-mode-column-at-pos (point)
+(defun typst-ts-core-column-at-pos (point)
   "Get the column at position POINT."
   (save-excursion
     (goto-char point)
@@ -40,6 +40,17 @@
     (back-to-indentation)
     (point)))
 
+(defun typst-ts-core-get-node-at-bol-nonwhite ()
+  "Get node at the first non-whitespace character at line beginning."
+  (save-excursion
+    (back-to-indentation)
+    (treesit-node-at (point))))
+
+(defun typst-ts-core-get-parent-of-node-at-bol-nonwhite ()
+  "See `typst-ts-core-get-node-at-bol-nonwhite'.
+May return nil."
+  (treesit-node-parent
+   (typst-ts-core-get-node-at-bol-nonwhite)))
 
 (defun typst-ts-core-node-get (node instructions)
   "Get things from NODE by INSTRUCTIONS.
