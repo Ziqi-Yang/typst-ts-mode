@@ -506,6 +506,16 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;;   .split(" ")
      ((n-p-gp "." "field" nil) parent-bol typst-ts-mode-indent-offset)
 
+     ;; multi-line item
+     ;; - foo
+     ;;   bar
+     ((and (parent-is "item")
+           (lambda (node &rest parent bol)
+             (treesit-node-prev-sibling node)))
+      (lambda (node &rest parent bol)
+        (treesit-node-start (treesit-node-prev-sibling node)))
+      0)
+
      ;; item - child item
      ((and (node-is "item") (parent-is "item")) parent-bol typst-ts-mode-indent-offset)
 
