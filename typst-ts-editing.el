@@ -53,7 +53,7 @@
   "Whether the current line is a heading.
 Return the heading node when yes otherwise nil."
   (let ((node (treesit-node-parent
-	             (treesit-node-at
+               (treesit-node-at
                 (save-excursion
                   (beginning-of-line-text)
                   (point))))))
@@ -70,24 +70,24 @@ Return the heading node when yes otherwise nil."
 When there is no relevant action to do it will execute the relevant function in
 the `GLOBAL-MAP' (example: `right-word')."
   (let ((heading (typst-ts-mode-heading--at-point-p))
-	      ;; car function, cdr string of function for `substitute-command-keys'
-	      (call-me/string
-	       (pcase direction
-	         ('left
-	          (cons #'outline-promote
-		              "\\[typst-ts-mode-heading-decrease]"))
-	         ('right
-	          (cons #'outline-demote
-		              "\\[typst-ts-mode-heading-decrease]"))
-	         ('up
-	          (cons #'outline-move-subtree-up
-		              "\\[typst-ts-mode-heading-up]"))
-	         ('down
-	          (cons #'outline-move-subtree-down
-		              "\\[typst-ts-mode-heading-down]"))
-	         (_ (error "%s is not one of: `right' `left'" direction)))))
+        ;; car function, cdr string of function for `substitute-command-keys'
+        (call-me/string
+         (pcase direction
+           ('left
+            (cons #'outline-promote
+                  "\\[typst-ts-mode-heading-decrease]"))
+           ('right
+            (cons #'outline-demote
+                  "\\[typst-ts-mode-heading-decrease]"))
+           ('up
+            (cons #'outline-move-subtree-up
+                  "\\[typst-ts-mode-heading-up]"))
+           ('down
+            (cons #'outline-move-subtree-down
+                  "\\[typst-ts-mode-heading-down]"))
+           (_ (error "%s is not one of: `right' `left'" direction)))))
     (if heading
-	      (call-interactively (car call-me/string))
+        (call-interactively (car call-me/string))
       (call-interactively
        (keymap-lookup global-map (substitute-command-keys (cdr call-me/string)))))))
 
@@ -153,8 +153,8 @@ When prefix ARG is non-nil, call global return function."
 NODE must be an item node!
 This function respects indentation."
   (let* (;; +, -, or <num>.
-	       (item-type (treesit-node-text
-	                   (treesit-node-child node 0)))
+         (item-type (treesit-node-text
+                     (treesit-node-child node 0)))
          (item-number (string-to-number item-type))
          (item-end (treesit-node-end node))
          (node-bol-column (typst-ts-core-column-at-pos
@@ -171,14 +171,14 @@ This function respects indentation."
   "Insert a heading after the section that NODE is part of.
 When there is no section it will insert a heading below point."
   (let* ((section
-	        (treesit-parent-until
-	         node
-	         (lambda (node)
-	           (string= (treesit-node-type node) "section"))
-	         t))
-	       ;; first child is heading
-	       (heading (treesit-node-child section 0))
-	       (heading-level (treesit-node-type (treesit-node-child heading 0))))
+          (treesit-parent-until
+           node
+           (lambda (node)
+             (string= (treesit-node-type node) "section"))
+           t))
+         ;; first child is heading
+         (heading (treesit-node-child section 0))
+         (heading-level (treesit-node-type (treesit-node-child heading 0))))
     (if section
         (goto-char (treesit-node-end section))
       ;; no headings so far
@@ -211,7 +211,7 @@ When there is no section it will insert a heading below point."
           ((equal parent-node-type "raw_blck")
            (insert-tab)
            (throw 'execute-result 'success))
-          
+
           ((or (equal cur-node-type "parbreak")
                (equal parent-node-type "item")
                ;; please turn on whitespace-mode to test the following conditions

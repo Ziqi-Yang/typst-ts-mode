@@ -123,4 +123,3 @@ If there is no fitting mode or no lang it will be `normal-mode'."
 
 (provide 'typst-ts-edit-indirect)
 ;;; typst-ts-edit-indirect.el ends here
-

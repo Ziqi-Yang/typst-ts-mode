@@ -154,17 +154,17 @@ BLOB-NODE."
          (bne (treesit-node-end blob-node))
          (lang-node? (treesit-node-prev-sibling blob-node))
          lang-node lang lang-mode)
-    
+
     (when (equal (treesit-node-type lang-node?) "ident")
       (setq lang-node lang-node?))
-    
+
     (when lang-node
       (setq lang (gethash
                   (downcase (treesit-node-text lang-node))
                   typst-ts-els-tag-lang-map))
       (when lang
         (setq lang-mode (typst-ts-els-get-lang-mode (symbol-name lang)))))
-    
+
     (if lang-mode
         (typst-ts-els-fontify-raw-block lang-mode bns bne)
       (put-text-property bns bne 'face 'typst-ts-markup-rawblock-blob-face))))
@@ -194,7 +194,7 @@ If you want to customize the rules, please customize the same name variable
               (label) @typst-ts-markup-label-face
               (ref) @typst-ts-markup-reference-face))
            ('middle
-            `((heading _ @typst-ts-markup-header-indicator-face (text) @typst-ts-markup-header-face) 
+            `((heading _ @typst-ts-markup-header-indicator-face (text) @typst-ts-markup-header-face)
               (emph) @typst-ts-markup-emphasis-face
               (strong) @typst-ts-markup-strong-face
               (item
@@ -233,7 +233,7 @@ If you want to customize the rules, please customize the same name variable
                              (text) @typst-ts-markup-header-face-5)
                     (heading "======" @typst-ts-markup-header-indicator-face-6
                              (text) @typst-ts-markup-header-face-6)))
-              ;; TODO performance enhancement 
+              ;; TODO performance enhancement
               (emph
                "_" @typst-ts-markup-emphasis-indicator-face
                (text) @typst-ts-markup-emphasis-face
@@ -413,14 +413,14 @@ See `treesit-simple-indent-rules'."
               (prev-nonwhite-line-node
                (treesit-node-at prev-nonwhite-pos))
               ((equal (treesit-node-type prev-nonwhite-line-node) "linebreak"))
-              
+
               (prev-nonwhite-line-heading-node
                (save-excursion
                  (goto-char prev-nonwhite-pos)
                  (back-to-indentation)
                  (treesit-node-at (point))))
               ((equal (treesit-node-type prev-nonwhite-line-heading-node) "-"))
-              
+
               (prev-nonwhite-line-top-node (treesit-node-parent
                                             prev-nonwhite-line-heading-node)))
     (equal (treesit-node-type prev-nonwhite-line-top-node) "item")))
@@ -469,13 +469,13 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
   ;; 1. `toggle-debug-on-error' to make sure you indentation code error report
   ;; 2. enable `treesit--indent-verbose' to see what indentation rule matches
   ;; 3. `treesit-inspect-mode' or `treesit-inspect-node-at-point'
-  
+
   ;; `indentation-test.typ' file is used for testing indentation.
 
   ;; no-node situation: often in insert mode > hit return at the line ending
   ;; `typst-ts-mode-indent-line-function' is created for handling end of buffer
   ;;  edge cases
-  
+
   ;; Note electric-pair-mode will auto insert newline character when condition meets
   ;; see `typst-ts-mode-electric-pair-open-newline-between-pairs-psif'
   ;; It may be better to turn off `electric-pair-open-newline-between-pairs'
@@ -486,7 +486,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;;             (treesit-node-parent (treesit-node-parent parent)) bol)
      ;;    nil)
      ;;  parent-bol 0)
-     
+
      ((and no-node (parent-is "source_file")) prev-line 0)
      ((parent-is "source_file") column-0 0)
 
@@ -494,7 +494,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
               ,typst-ts-mode--container-node-types-regexp
               nil)
       parent-bol 0)
-     
+
      ;; math
      ;; math align, example:
      ;; sum_(k=0)^n k
@@ -539,7 +539,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;; whether normally or in insertion, the current node is always nil...
      ((n-p-gp nil "blob" "raw_blck")
       no-indent 0)
-     
+
      ((match "```" "raw_blck" nil 2 3 )
       parent-bol 0)
 
@@ -598,7 +598,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
   (save-excursion
     (end-of-line)
     (if (re-search-backward typst-ts-mode-outline-regexp nil t)
-	      (- (match-end 1) (match-beginning 1))
+        (- (match-end 1) (match-beginning 1))
       0)))
 
 
@@ -616,13 +616,13 @@ FILE: file path for the result compile file."
   "C-c C-c C" #'typst-ts-compile
   "C-c C-c w" #'typst-ts-watch-mode
   "C-c C-c p" #'typst-ts-mode-preview
-  
+
   "M-<left>" #'typst-ts-mode-heading-decrease
   "M-<right>" #'typst-ts-mode-heading-increase
   "M-<down>" #'typst-ts-mode-heading-down
   "M-<up>" #'typst-ts-mode-heading-up
   "M-<return>" #'typst-ts-mode-meta-return
-  
+
   ;; don't bind <return>
   ;; Binding a command to "<return>" is generally a bug.
   ;; Emacs will first look for a binding for `return` and if it finds one
@@ -707,7 +707,7 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   :syntax-table typst-ts-mode-syntax-table
   :after-hook
   (typst-ts-mode-after-hook-function)
-  
+
   (unless (treesit-ready-p 'typst)
     (user-error "Tree-sitter for Typst isn't available"))
 
@@ -745,7 +745,7 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
 
   (setq-local treesit-defun-type-regexp
               (regexp-opt '("let" "math")))
-  
+
   ;; treesit-defun-name-function
 
   ;; (setq-local treesit-thing-settings

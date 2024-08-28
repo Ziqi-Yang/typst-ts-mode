@@ -38,7 +38,7 @@
 
 (defun typst-ts-mc-export-to-markdown ()
   (interactive)
-  
+
   ;; for simplicity
   (unless buffer-file-name
     (user-error "You should save the file first!"))

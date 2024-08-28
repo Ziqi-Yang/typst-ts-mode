@@ -32,10 +32,10 @@
     ("C" "compile" typst-ts-compile)
     ("w" "watch" typst-ts-watch-mode)
     ("p" "preview" typst-ts-mode-preview)]
-   
+
    ["Export"
     ("em" "markdown" typst-ts-mc-export-to-markdown)]
-   
+
    ["Search"
     ("ss" "symbol" typst-ts-mc-search-typst-symbol)
     ("sr" "recognize symbol" typst-ts-mc-recognize-typst-symbol)
