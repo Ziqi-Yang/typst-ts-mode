@@ -25,25 +25,21 @@
 (require 'outline)
 (require 'typst-ts-core)
 
-;;;###autoload
 (defun typst-ts-mode-heading-up ()
   "Switch the current heading with the heading above."
   (interactive)
   (typst-ts-mode-meta--dwim 'up))
 
-;;;###autoload
 (defun typst-ts-mode-heading-down ()
   "Switch the current heading with the heading below."
   (interactive)
   (typst-ts-mode-meta--dwim 'down))
 
-;;;###autoload
 (defun typst-ts-mode-heading-increase ()
   "Increase the heading level."
   (interactive)
   (typst-ts-mode-meta--dwim 'right))
 
-;;;###autoload
 (defun typst-ts-mode-heading-decrease ()
   "Decrease heading level."
   (interactive)
@@ -192,8 +188,6 @@ When there is no section it will insert a heading below point."
     (insert heading-level " ")
     (indent-according-to-mode)))
 
-
-;;;###autoload
 (defun typst-ts-mode-cycle (&optional _arg)
   "Cycle."
   (interactive "P")
