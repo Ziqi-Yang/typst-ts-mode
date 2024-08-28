@@ -124,11 +124,10 @@ When prefix ARG is non-nil, call global return function."
             ;; on item node end
             ((and (eolp)
                   (setq node (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
-                  (equal (treesit-node-type node) "item")
-                  (length= (treesit-node-children node) 2))
+                  (equal (treesit-node-type node) "item"))
              (if (> (treesit-node-child-count node) 1)
                  (typst-ts-mode-insert--item node)
-               ;; no text means delete the item on current line
+               ;; no text means delete the item on current line: (item -) instead of (item - (text))
                (beginning-of-line)
                (kill-line)
                (indent-according-to-mode))
