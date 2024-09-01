@@ -587,8 +587,12 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
   (treesit-node-text node))
 
 ;; outline-minor-mode
-(defconst typst-ts-mode-outline-regexp "^[[:space:]]*\\(=+\\) "
+(defconst typst-ts-mode-outline-regexp "^[[:space:]]*\\(=+\\)"
   "Regexp identifying Typst header.")
+
+(defconst typst-ts-mode-outline-heading-alist
+  '(("=" . 1) ("==" . 2) ("===" . 3) ("====" . 4) ("=====" . 5) ("======" . 6))
+  "See `outline-heading-alist'.")
 
 (defun typst-ts-mode-outline-level ()
   "Return the level of the heading at point."
@@ -755,6 +759,7 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
       (setq treesit-outline-predicate (regexp-opt '("section" "source_file")))
     (setq-local outline-regexp typst-ts-mode-outline-regexp)
     (setq-local outline-level #'typst-ts-mode-outline-level))
+  (setq-local outline-heading-alist typst-ts-mode-outline-heading-alist)
   ;; Although without enabling `outline-minor-mode' also works, enabling it
   ;; provides outline ellipsis
   ;; TODO add it to after-hook
