@@ -503,31 +503,30 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;;   .split(" ")
      ((n-p-gp "." "field" nil) parent-bol typst-ts-mode-indent-offset)
 
+     ((parent-is "comment") prev-adaptive-prefix 0)
 
      ;; item - child item
-     ((and (node-is "item") (parent-is "item")) parent-bol typst-ts-mode-indent-offset)
-
+     ((and (node-is "item") (parent-is "item")) parent-bol
+      typst-ts-mode-indent-offset)
+     
+     ;; TODO
      ;; item - previous nonwhite line is item type and the ending is a linebreak
      (typst-ts-mode--identation-item-linebreak
-      typst-ts-mode--indentation-item-linebreak-get-pos typst-ts-mode-indent-offset)
-
+      typst-ts-mode--indentation-item-linebreak-get-pos
+      typst-ts-mode-indent-offset)
+     
      ;; multi-line item
-     ;; - foo
-     ;;   bar
+     ;; -  [hi] foo
+     ;;    bar
+     ;; my try with `prev-adaptive-prefix' failed even after set the
+     ;; `adaptive-fill-regexp'
      ((match nil "item" nil 2 nil)
       typst-ts-mode--indentation-multiline-item-get-anchor 0)
      
-     ;; item - item should follow its previous line item's indentation level
-     ((and no-node
-           (lambda (node parent &rest _)
-             (save-excursion
-               (forward-line -1)
-               (back-to-indentation)
-               (string= "item" (treesit-node-type
-                                (treesit-node-parent
-                                 (treesit-node-at (point))))))))
-      prev-line
-      0)
+     ;; item - new item content should follow its previous line's indentation
+     ;; level
+     ((and no-node typst-ts-mode--indentation-prev-line-is-item-p)
+      typst-ts-mode--indentation-multiline-item-get-anchor_ 0)
 
      ;; raw block
      ;; whether normally or in insertion, the current node is always nil...
@@ -560,6 +559,26 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
 (defun typst-ts-mode--indentation-multiline-item-get-anchor (_node parent _bol)
   "Return the start of second child of PARENT."
   (treesit-node-start (treesit-node-child parent 1)))
+
+(defun typst-ts-mode--indentation-multiline-item-get-anchor_ (_node _parent _bol)
+  "Return the start of second child of the current item.
+This function is meant to be used when user hits a return key."
+  (treesit-node-start
+   (treesit-node-child
+    (treesit-node-parent
+     (treesit-node-at
+      (save-excursion
+        (beginning-of-line-text 0)
+        (point))))
+    1)))
+
+(defun typst-ts-mode--indentation-prev-line-is-item-p (_node _parent _bol)
+  (save-excursion
+    (forward-line -1)
+    (back-to-indentation)
+    (string= "item" (treesit-node-type
+                     (treesit-node-parent
+                      (treesit-node-at (point)))))))
 
 
 (defun typst-ts-mode-comment-setup()

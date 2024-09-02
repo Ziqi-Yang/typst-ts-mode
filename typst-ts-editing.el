@@ -104,29 +104,55 @@ Using ARG argument will ignore the context and it will insert a heading instead.
   "Handle RET depends on condition.
 When prefix ARG is non-nil, call global return function."
   (interactive "P")
-  (let (execute-result node)
+  (let (execute-result)
     (unless current-prefix-arg
       (setq
        execute-result
        (catch 'execute-result
-         (when-let* ((cur-pos (point))
-                     (cur-node (treesit-node-at cur-pos))
-                     (cur-node-type (treesit-node-type cur-node))
-                     (parent-node (treesit-node-parent cur-node))  ; could be nil
-                     (parent-node-type (treesit-node-type parent-node)))
+         (let* ((cur-pos (point))
+                (cur-node (treesit-node-at cur-pos))
+                (cur-node-type (treesit-node-type cur-node))
+                (parent-node (treesit-node-parent cur-node))  ; could be nil
+                (parent-node-type (treesit-node-type parent-node))
+                node)
            ;; (message "%s %s" cur-node parent-node)
            (cond
-            (arg (throw 'execute-result 'default))
             ;; on item node end
             ((and (eolp)
                   (setq node (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
                   (equal (treesit-node-type node) "item"))
-             (if (> (treesit-node-child-count node) 1)
-                 (typst-ts-mode-insert--item node)
-               ;; no text means delete the item on current line: (item -) instead of (item - (text))
-               (beginning-of-line)
-               (kill-line)
-               (indent-according-to-mode))
+             (let* ((child-node (treesit-node-child node 1))
+                    (next-line-bol-text-pos
+                     (save-excursion
+                       (beginning-of-line-text 2)
+                       (point)))
+                    (next-line-node-type
+                     (treesit-node-type
+                      (treesit-node-parent
+                       (treesit-node-at next-line-bol-text-pos)))))
+               (if child-node
+                   (if (not (equal next-line-node-type "item"))
+                       (typst-ts-mode-insert--item node)
+                     (call-interactively #'newline))
+                 ;; no text means delete the item on current line: (item -)
+                 (beginning-of-line)
+                 (kill-line)
+                 ;; whether the previous line is in an item
+                 (let* ((prev-line-bol-text-pos
+                         (save-excursion
+                           (beginning-of-line-text 0)
+                           (point)))
+                        (prev-line-node-type
+                         (treesit-node-type
+                          (treesit-node-parent
+                           (treesit-node-at prev-line-bol-text-pos)))))
+                   (if (equal "item" prev-line-node-type)
+                       (progn
+                         (kill-line)
+                         (forward-line -1)
+                         (end-of-line)
+                         (call-interactively #'newline))
+                     (indent-according-to-mode)))))
              (throw 'execute-result 'success))
             )))))
     ;; execute default action if not successful
