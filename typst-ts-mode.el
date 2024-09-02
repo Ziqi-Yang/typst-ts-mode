@@ -503,15 +503,6 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;;   .split(" ")
      ((n-p-gp "." "field" nil) parent-bol typst-ts-mode-indent-offset)
 
-     ;; multi-line item
-     ;; - foo
-     ;;   bar
-     ((and (parent-is "item")
-           (lambda (node &rest parent bol)
-             (treesit-node-prev-sibling node)))
-      (lambda (node &rest parent bol)
-        (treesit-node-start (treesit-node-prev-sibling node)))
-      0)
 
      ;; item - child item
      ((and (node-is "item") (parent-is "item")) parent-bol typst-ts-mode-indent-offset)
@@ -520,6 +511,12 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      (typst-ts-mode--identation-item-linebreak
       typst-ts-mode--indentation-item-linebreak-get-pos typst-ts-mode-indent-offset)
 
+     ;; multi-line item
+     ;; - foo
+     ;;   bar
+     ((match nil "item" nil 2 nil)
+      typst-ts-mode--indentation-multiline-item-get-anchor 0)
+     
      ;; item - item should follow its previous line item's indentation level
      ((and no-node
            (lambda (node parent &rest _)
@@ -559,6 +556,10 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;; example: (item (text) (text) (text)) when `(text)' is in different line
      (catch-all prev-line 0)))
   "Tree-sitter indent rules for `typst-ts-mode'.")
+
+(defun typst-ts-mode--indentation-multiline-item-get-anchor (_node parent _bol)
+  "Return the start of second child of PARENT."
+  (treesit-node-start (treesit-node-child parent 1)))
 
 
 (defun typst-ts-mode-comment-setup()
