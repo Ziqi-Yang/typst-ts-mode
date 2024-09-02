@@ -261,8 +261,9 @@ When there is no section it will insert a heading below point."
                         (treesit-node-parent
                          (treesit-node-at prev-nonwhite-line-bol)))
                        (cur-line-bol-column (typst-ts-core-column-at-pos cur-line-bol))
-                       (prev-nonwhite-line-bol-column
-                        (typst-ts-core-column-at-pos prev-nonwhite-line-bol)))
+                       (prev-nonwhite-line-top-node-start-column
+                        (typst-ts-core-column-at-pos
+                         (treesit-node-start prev-nonwhite-line-top-node))))
              (cond
               ;; 1. el
               ;; 2. psy| <- can toggle indent
@@ -270,18 +271,37 @@ When there is no section it will insert a heading below point."
                 (equal (treesit-node-type prev-nonwhite-line-top-node) "item")
                 ;; previous nonwhite-line ending is not '\' character
                 (not (equal (treesit-node-type prev-nonwhite-line-node) "linebreak")))
-               ;; TODO cycle all its children
-               (let (point)
-                 (if (not (eq cur-line-bol-column prev-nonwhite-line-bol-column))
-                     (progn
-                       (setq point (point))
-                       (indent-line-to prev-nonwhite-line-bol-column)
-                       (goto-char (- point typst-ts-mode-indent-offset)))
-                   (setq point (point))
-                   (indent-line-to (+ typst-ts-mode-indent-offset
-                                      prev-nonwhite-line-bol-column))
-                   (goto-char (+ typst-ts-mode-indent-offset point)))
-                 (throw 'execute-result 'success))))))
+
+               (let* ((parent-node-start-column
+                       (typst-ts-core-column-at-pos
+                        (treesit-node-start parent-node)))
+                      (offset
+                       (- parent-node-start-column
+                          prev-nonwhite-line-top-node-start-column)))
+                 (if (= offset 0)
+                     (typst-ts-core-for-lines-covered-by-node
+                      parent-node
+                      (lambda ()
+                        (let ((pos (point)))
+                          (indent-line-to
+                           (+ (typst-ts-core-column-at-pos
+                               (typst-ts-core-line-bol-pos))
+                              typst-ts-mode-indent-offset))
+                          ;; (goto-char (+ typst-ts-mode-indent-offset point))
+                          )))
+                   (typst-ts-core-for-lines-covered-by-node
+                    parent-node
+                    (lambda ()
+                      (let ((pos (point)))
+                        (indent-line-to
+                         (max (- (typst-ts-core-column-at-pos
+                                  (typst-ts-core-line-bol-pos))
+                                 offset)
+                              0))
+                        ;; (goto-char (- pos typst-ts-mode-indent-offset))
+                        )))))
+               (throw 'execute-result 'success)
+               ))))
           (t nil)))))
     ;; execute default action if not successful
     (unless (eq execute-result 'success)

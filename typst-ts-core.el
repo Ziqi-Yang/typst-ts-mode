@@ -45,6 +45,14 @@
     (back-to-indentation)
     (point)))
 
+(defun typst-ts-core-line-bol-pos (&optional pos)
+  "POS."
+  (save-excursion
+    (when pos
+      (goto-char pos))
+    (back-to-indentation)
+    (point)))
+
 (defun typst-ts-core-get-node-at-bol-nonwhite (&optional pos)
   "Get node at the first non-whitespace character at line beginning.
 If POS is given, operate on the line that POS locates at."
@@ -59,6 +67,15 @@ If POS is given, operate on the line that POS locates at."
 POS.  May return nil."
   (treesit-node-parent
    (typst-ts-core-get-node-at-bol-nonwhite pos)))
+
+(defun typst-ts-core-for-lines-covered-by-node (node fn)
+  (let ((ns (treesit-node-start node))
+        (ne (treesit-node-end node)))
+    (save-excursion
+      (goto-char ns)
+      (while (and (< (point) ne) (not (eobp)))
+        (funcall fn)
+        (forward-line 1)))))
 
 (defun typst-ts-core-node-get (node instructions)
   "Get things from NODE by INSTRUCTIONS.
