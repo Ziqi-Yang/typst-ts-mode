@@ -121,17 +121,22 @@ When prefix ARG is non-nil, call global return function."
             ((and (eolp)
                   (setq node (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
                   (equal (treesit-node-type node) "item"))
-             (let* ((child-node (treesit-node-child node 1))
+             (let* ((item-node node)
+                    (child-node (treesit-node-child item-node 1))
+                    (next-line-node
+                     (typst-ts-core-get-parent-of-node-at-bol-nonwhite
+                      (save-excursion
+                        (forward-line 1)
+                        (point))))
                     (next-line-node-type
-                     (treesit-node-type
-                      (typst-ts-core-get-parent-of-node-at-bol-nonwhite
-                       (save-excursion
-                         (forward-line 1)
-                         (point))))))
+                     (treesit-node-type next-line-node)))
                (if child-node
-                   (if (not (equal next-line-node-type "item"))
-                       (typst-ts-mode-insert--item node)
-                     (call-interactively #'newline))
+                   (if (and (equal next-line-node-type "item")
+                            ;; end of buffer situation (or next line is the end
+                            ;; line (no newline character))
+                            (not (equal next-line-node item-node)))
+                       (call-interactively #'newline)
+                     (typst-ts-mode-insert--item item-node))
                  ;; no text means delete the item on current line: (item -)
                  (beginning-of-line)
                  (kill-line)
@@ -154,8 +159,7 @@ When prefix ARG is non-nil, call global return function."
     ;; execute default action if not successful
     (unless (eq execute-result 'success)
       ;; we only need to look for global keybinding, see `(elisp) Active Keymaps'
-      (let ((global-ret-function
-             (global-key-binding (kbd "RET"))))
+      (let ((global-ret-function (global-key-binding (kbd "RET"))))
         (if (not current-prefix-arg)
             (call-interactively global-ret-function)
           (if (yes-or-no-p
