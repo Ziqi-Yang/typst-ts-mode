@@ -119,19 +119,21 @@ When prefix ARG is non-nil, call global return function."
            (cond
             ;; on item node end
             ((and (eolp)
-                  (setq node (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
-                  (equal (treesit-node-type node) "item"))
+                  (setq node (typst-ts-core-parent-util-type
+                              (typst-ts-core-get-parent-of-node-at-bol-nonwhite)
+                              "item" t t)))
              (let* ((item-node node)
-                    (child-node (treesit-node-child item-node 1))
+                    (has-children (treesit-node-child item-node 1))
                     (next-line-node
                      (typst-ts-core-get-parent-of-node-at-bol-nonwhite
                       (save-excursion
                         (forward-line 1)
                         (point))))
-                    (next-line-node-type
-                     (treesit-node-type next-line-node)))
-               (if child-node
-                   (if (and (equal next-line-node-type "item")
+                    (next-line-top-item-node
+                     (typst-ts-core-parent-util-type
+                      next-line-node "item" t t)))
+               (if has-children
+                   (if (and next-line-top-item-node
                             ;; end of buffer situation (or next line is the end
                             ;; line (and no newline character))
                             (not (equal
@@ -146,15 +148,18 @@ When prefix ARG is non-nil, call global return function."
                  (beginning-of-line)
                  (kill-line)
                  ;; whether the previous line is in an item
-                 (let* ((prev-line-node-type
-                         (treesit-node-type
+                 (let* ((prev-line-item-node
+                         (typst-ts-core-parent-util-type
                           (typst-ts-core-get-parent-of-node-at-bol-nonwhite
                            (save-excursion
                              (forward-line -1)
-                             (point))))))
-                   (if (equal "item" prev-line-node-type)
+                             (point)))
+                          "item" t t)))
+                   (if prev-line-item-node
                        (progn
-                         (kill-line)
+                         ;; sometimes there is no newlines characters at the EOL
+                         (ignore-errors
+                           (kill-line))
                          (forward-line -1)
                          (end-of-line)
                          (call-interactively #'newline))
@@ -259,7 +264,7 @@ When there is no section it will insert a heading below point."
 
           ((setq node
                  (typst-ts-core-parent-util-type
-                  cur-line-nonwhite-bol-node "item" t))
+                  cur-line-nonwhite-bol-node "item" t t))
            (let* ((cur-item-node node)
                   (prev-significant-node
                    (typst-ts-core-prev-sibling-ignore-types

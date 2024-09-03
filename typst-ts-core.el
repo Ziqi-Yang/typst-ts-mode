@@ -32,6 +32,12 @@
   :type 'natnum
   :group 'typst-ts)
 
+(defconst typst-ts-mode--container-node-types-regexp
+  ;; '_math_group' here is because `treesit-parent-until' doesn't hanlde node type alias well
+  ;; TODO file a bug
+  (regexp-opt '("block" "content" "group" "math" "_math_group"))
+  "Container node types regexp.")
+
 (defun typst-ts-core-column-at-pos (point)
   "Get the column at position POINT."
   (save-excursion
@@ -87,15 +93,29 @@ Currently the effect of FN shouldn't change line number."
 
 ;; Emacs 29 doesn't support string type PRED, so this function is created for
 ;; convenience
-(defun typst-ts-core-parent-util-type (node type include-node)
+(defun typst-ts-core-parent-util-type (node type &optional include-node same-context)
   "See `treesit-parent-until'.
 TYPE is an regexp expression for matching types.
-NODE TYPE INCLUDE-NODE."
-  (treesit-parent-until
-   node
-   (lambda (node)
-     (string-match-p type (treesit-node-type node)))
-   include-node))
+SAME-CONTEXT: whether the parent should be in the current context with NODE.
+The following example means parent item node is in a different context with
+`hi' text node
+- #[
+hi
+]
+NODE TYPE INCLUDE-NODE see `treesit-parent-until'."
+  (let ((matched-node
+         (treesit-parent-until
+          node
+          (lambda (node)
+            (let ((node-type (treesit-node-type node)))
+              (or (and same-context
+                       (string-match-p
+                        typst-ts-mode--container-node-types-regexp node-type))
+                  (string-match-p type node-type))))
+          include-node)))
+    (when (and matched-node
+               (string-match-p type (treesit-node-type matched-node)))
+      matched-node)))
 
 (defun typst-ts-core-prev-sibling-ignore-types (node types)
   "Find previous sibling node ignoring nodes whose type matches TYPES.

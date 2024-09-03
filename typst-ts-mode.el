@@ -388,12 +388,6 @@ If you want to customize the rules, please customize the same name variable
     (markup-standard code-standard math-standard)
     (markup-extended code-extended math-extended)))
 
-(defconst typst-ts-mode--container-node-types-regexp
-  ;; '_math_group' here is because `treesit-parent-until' doesn't hanlde node type alias well
-  ;; TODO file a bug
-  (regexp-opt '("block" "content" "group" "math" "_math_group"))
-  "Container node types regexp.")
-
 (defun typst-ts-mode--identation-item-linebreak (_node _parent bol)
   "Where the current line is underneath a item with linebreak as ending.
 Ignore whitespaces.
@@ -516,7 +510,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
       typst-ts-mode-indent-offset)
      
      ;; multi-line item
-     ;; -  [hi] foo
+     ;; -  #[hi] foo
      ;;    bar
      ;; my try with `prev-adaptive-prefix' failed even after set the
      ;; `adaptive-fill-regexp'
@@ -565,20 +559,22 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
 This function is meant to be used when user hits a return key."
   (treesit-node-start
    (treesit-node-child
-    (treesit-node-parent
+    (typst-ts-core-parent-util-type
      (treesit-node-at
       (save-excursion
-        (beginning-of-line-text 0)
-        (point))))
+        (forward-line -1)
+        (back-to-indentation)
+        (point)))
+     "item" t)
     1)))
 
 (defun typst-ts-mode--indentation-prev-line-is-item-p (_node _parent _bol)
   (save-excursion
     (forward-line -1)
     (back-to-indentation)
-    (string= "item" (treesit-node-type
-                     (treesit-node-parent
-                      (treesit-node-at (point)))))))
+    (typst-ts-core-parent-util-type
+     (treesit-node-at (point))
+     "item" t)))
 
 
 (defun typst-ts-mode-comment-setup()
@@ -719,6 +715,15 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
                (file-name-nondirectory buffer-file-name)
                typst-ts-compile-options))))
 
+  ;; Although without enabling `outline-minor-mode' also works, enabling it
+  ;; provides outline ellipsis (if you use `set-display-table-slot' to set)
+  (outline-minor-mode t)
+
+  ;; necessary for
+  ;; `typst-ts-mode-cycle'(`typst-ts-editing--indent-item-node-lines')
+  ;; and indentation to work 
+  ;; (indent-tabs-mode -1)
+
   (typst-ts-mode-check-grammar-version))
 
 ;;;###autoload
@@ -780,10 +785,6 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
     (setq-local outline-regexp typst-ts-mode-outline-regexp)
     (setq-local outline-level #'typst-ts-mode-outline-level))
   (setq-local outline-heading-alist typst-ts-mode-outline-heading-alist)
-  ;; Although without enabling `outline-minor-mode' also works, enabling it
-  ;; provides outline ellipsis
-  ;; TODO add it to after-hook
-  (outline-minor-mode t)
 
   (treesit-major-mode-setup)
 
