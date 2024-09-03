@@ -32,10 +32,13 @@
   :type 'natnum
   :group 'typst-ts)
 
-(defconst typst-ts-mode--container-node-types-regexp
+(defconst typst-ts-core--container-node-types
   ;; '_math_group' here is because `treesit-parent-until' doesn't hanlde node type alias well
   ;; TODO file a bug
-  (regexp-opt '("block" "content" "group" "math" "_math_group"))
+  '("block" "content" "group" "math" "_math_group"))
+
+(defconst typst-ts-mode--container-node-types-regexp
+  (regexp-opt typst-ts-core--container-node-types)
   "Container node types regexp.")
 
 (defun typst-ts-core-column-at-pos (point)

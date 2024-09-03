@@ -471,12 +471,12 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
   ;; see `typst-ts-mode-electric-pair-open-newline-between-pairs-psif'
   ;; It may be better to turn off `electric-pair-open-newline-between-pairs'
   `((typst
-     ;; ((lambda (node parent bol)  ; NOTE
-     ;;    (message "%s %s %s %s %s" node parent
-     ;;             (treesit-node-parent parent)
-     ;;             (treesit-node-parent (treesit-node-parent parent)) bol)
-     ;;    nil)
-     ;;  parent-bol 0)
+     ((lambda (node parent bol)  ; NOTE
+        (message "%s %s %s %s %s" node parent
+                 (treesit-node-parent parent)
+                 (treesit-node-parent (treesit-node-parent parent)) bol)
+        nil)
+      parent-bol 0)
 
      ((and no-node (parent-is "source_file")) prev-line 0)
      ((parent-is "source_file") column-0 0)
@@ -519,7 +519,15 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      
      ;; item - new item content should follow its previous line's indentation
      ;; level
-     ((and no-node typst-ts-mode--indentation-prev-line-is-item-p)
+     ((and no-node
+           typst-ts-mode--indentation-prev-line-is-item-p
+           ;; not in container
+           ;; example:
+           ;; - hi
+           ;;   hi #[
+           ;;     - hello | <- return
+           ;;   ]
+           (not (n-p-gp nil "parbreak" ,typst-ts-mode--container-node-types-regexp)))
       typst-ts-mode--indentation-multiline-item-get-anchor_ 0)
 
      ;; raw block
@@ -719,10 +727,12 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   ;; provides outline ellipsis (if you use `set-display-table-slot' to set)
   (outline-minor-mode t)
 
+  ;; FIXME
   ;; necessary for
   ;; `typst-ts-mode-cycle'(`typst-ts-editing--indent-item-node-lines')
-  ;; and indentation to work 
-  ;; (indent-tabs-mode -1)
+  ;; since it calculate offset based on character
+  ;; (maybe also some indentation rules)
+  (indent-tabs-mode -1)
 
   (typst-ts-mode-check-grammar-version))
 

@@ -129,11 +129,19 @@ When prefix ARG is non-nil, call global return function."
                       (save-excursion
                         (forward-line 1)
                         (point))))
-                    (next-line-top-item-node
+                    (next-line-top-node  ; get container type or `item' type node
                      (typst-ts-core-parent-util-type
-                      next-line-node "item" t t)))
+                      next-line-node
+                      (regexp-opt
+                       (append
+                        typst-ts-core--container-node-types
+                        '("item")))
+                      t)))
                (if has-children
-                   (if (and next-line-top-item-node
+                   ;; example:
+                   ;; - #[| <- return
+                   ;; ]
+                   (if (and next-line-top-node
                             ;; end of buffer situation (or next line is the end
                             ;; line (and no newline character))
                             (not (equal
