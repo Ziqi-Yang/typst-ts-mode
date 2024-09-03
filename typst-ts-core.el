@@ -69,7 +69,7 @@ POS.  May return nil."
    (typst-ts-core-get-node-at-bol-nonwhite pos)))
 
 (defun typst-ts-core-for-lines-covered-by-node (node fn)
-  "Execute FN on all lines covere by NODE.
+  "Execute FN on all lines covered by NODE.
 Currently the effect of FN shouldn't change line number."
   (let ((ns (treesit-node-start node))
         ;; use line number not position since when editing, position of node end
@@ -77,9 +77,12 @@ Currently the effect of FN shouldn't change line number."
         (ne-line-num (line-number-at-pos (treesit-node-end node))))
     (save-excursion
       (goto-char ns)
-      (while (<= (line-number-at-pos) ne-line-num)
+      (while (< (line-number-at-pos) ne-line-num)
         (funcall fn)
-        (forward-line 1)))))
+        (forward-line 1))
+      ;; in case the last line is the last line of buffer, we separate this
+      ;; operation from while loop
+      (funcall fn))))
 
 
 ;; Emacs 29 doesn't support string type PRED, so this function is created for
