@@ -133,8 +133,13 @@ When prefix ARG is non-nil, call global return function."
                (if child-node
                    (if (and (equal next-line-node-type "item")
                             ;; end of buffer situation (or next line is the end
-                            ;; line (no newline character))
-                            (not (equal next-line-node item-node)))
+                            ;; line (and no newline character))
+                            (not (equal
+                                  (line-number-at-pos
+                                   (save-excursion
+                                     (forward-line 1)
+                                     (point)))
+                                  (line-number-at-pos (point-max)))))
                        (call-interactively #'newline)
                      (typst-ts-mode-insert--item item-node))
                  ;; no text means delete the item on current line: (item -)
