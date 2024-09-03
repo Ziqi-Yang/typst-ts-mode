@@ -69,13 +69,44 @@ POS.  May return nil."
    (typst-ts-core-get-node-at-bol-nonwhite pos)))
 
 (defun typst-ts-core-for-lines-covered-by-node (node fn)
+  "Execute FN on all lines covere by NODE.
+Currently the effect of FN shouldn't change line number."
   (let ((ns (treesit-node-start node))
-        (ne (treesit-node-end node)))
+        ;; use line number not position since when editing, position of node end
+        ;; changes, but the information is not updated
+        (ne-line-num (line-number-at-pos (treesit-node-end node))))
     (save-excursion
       (goto-char ns)
-      (while (and (< (point) ne) (not (eobp)))
+      (while (<= (line-number-at-pos) ne-line-num)
         (funcall fn)
         (forward-line 1)))))
+
+
+;; Emacs 29 doesn't support string type PRED, so this function is created for
+;; convenience
+(defun typst-ts-core-parent-util-type (node type include-node)
+  "See `treesit-parent-until'.
+TYPE is an regexp expression for matching types.
+NODE TYPE INCLUDE-NODE."
+  (treesit-parent-until
+   node
+   (lambda (node)
+     (string-match-p type (treesit-node-type node)))
+   include-node))
+
+(defun typst-ts-core-prev-sibling-ignore-types (node types)
+  "Find previous sibling node ignoring nodes whose type matches TYPES.
+NODE: current node.
+TYPES is an regexp expression."
+  (let* ((prev-node (treesit-node-prev-sibling node))
+         (prev-node-type (treesit-node-type prev-node)))
+    (while (and prev-node-type
+                (string-match-p types prev-node-type))
+      (message "%s" prev-node)
+      (setq
+       prev-node (treesit-node-prev-sibling prev-node)
+       prev-node-type (treesit-node-type prev-node)))
+    prev-node))
 
 (defun typst-ts-core-node-get (node instructions)
   "Get things from NODE by INSTRUCTIONS.
