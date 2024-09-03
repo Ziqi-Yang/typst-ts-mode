@@ -122,14 +122,12 @@ When prefix ARG is non-nil, call global return function."
                   (setq node (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
                   (equal (treesit-node-type node) "item"))
              (let* ((child-node (treesit-node-child node 1))
-                    (next-line-bol-text-pos
-                     (save-excursion
-                       (beginning-of-line-text 2)
-                       (point)))
                     (next-line-node-type
                      (treesit-node-type
-                      (treesit-node-parent
-                       (treesit-node-at next-line-bol-text-pos)))))
+                      (typst-ts-core-get-parent-of-node-at-bol-nonwhite
+                       (save-excursion
+                         (forward-line 1)
+                         (point))))))
                (if child-node
                    (if (not (equal next-line-node-type "item"))
                        (typst-ts-mode-insert--item node)
@@ -138,14 +136,12 @@ When prefix ARG is non-nil, call global return function."
                  (beginning-of-line)
                  (kill-line)
                  ;; whether the previous line is in an item
-                 (let* ((prev-line-bol-text-pos
-                         (save-excursion
-                           (beginning-of-line-text 0)
-                           (point)))
-                        (prev-line-node-type
+                 (let* ((prev-line-node-type
                          (treesit-node-type
-                          (treesit-node-parent
-                           (treesit-node-at prev-line-bol-text-pos)))))
+                          (typst-ts-core-get-parent-of-node-at-bol-nonwhite
+                           (save-excursion
+                             (forward-line -1)
+                             (point))))))
                    (if (equal "item" prev-line-node-type)
                        (progn
                          (kill-line)
@@ -266,21 +262,23 @@ When there is no section it will insert a heading below point."
                          (treesit-node-start prev-nonwhite-line-top-node))))
              (cond
               ;; 1. el
-              ;; 2. psy| <- can toggle indent
+              ;; 2. psy| <- can toggle indent (of all its descendant nodes)
               ((and
                 (equal (treesit-node-type prev-nonwhite-line-top-node) "item")
                 ;; previous nonwhite-line ending is not '\' character
                 (not (equal (treesit-node-type prev-nonwhite-line-node) "linebreak")))
 
-               (let* ((parent-node-start-column
+               (let* ((cur-line-top-node
+                       (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
+                      (cur-line-top-node-start-column
                        (typst-ts-core-column-at-pos
-                        (treesit-node-start parent-node)))
+                        (treesit-node-start cur-line-top-node)))
                       (offset
-                       (- parent-node-start-column
+                       (- cur-line-top-node-start-column
                           prev-nonwhite-line-top-node-start-column)))
                  (if (= offset 0)
                      (typst-ts-core-for-lines-covered-by-node
-                      parent-node
+                      cur-line-top-node
                       (lambda ()
                         (let ((pos (point)))
                           (indent-line-to
@@ -290,7 +288,7 @@ When there is no section it will insert a heading below point."
                           ;; (goto-char (+ typst-ts-mode-indent-offset point))
                           )))
                    (typst-ts-core-for-lines-covered-by-node
-                    parent-node
+                    cur-line-top-node
                     (lambda ()
                       (let ((pos (point)))
                         (indent-line-to
