@@ -217,7 +217,7 @@ When there is no section it will insert a heading below point."
 (defun typst-ts-editing--indent-item-node-lines (node offset)
   (let ((item-node-min-column
          (typst-ts-core-column-at-pos
-          (typst-ts-core-line-bol-pos
+          (typst-ts-core-line-bol-nonwhite-pos
            (treesit-node-start node)))))
     (if (< (+ item-node-min-column offset) 0)
         (setq offset (- item-node-min-column)))
@@ -226,7 +226,7 @@ When there is no section it will insert a heading below point."
      (lambda ()
        (indent-line-to
         (+ (typst-ts-core-column-at-pos
-            (typst-ts-core-line-bol-pos))
+            (typst-ts-core-line-bol-nonwhite-pos))
            offset))))))
 
 (defun typst-ts-mode-cycle (&optional _arg)
@@ -294,7 +294,8 @@ When there is no section it will insert a heading below point."
                  (typst-ts-editing--indent-item-node-lines
                   cur-item-node
                   (- typst-ts-mode-indent-offset (abs offset)))))
-             ))
+
+             (throw 'execute-result 'success)))
           
           (t nil)))))
     ;; execute default action if not successful

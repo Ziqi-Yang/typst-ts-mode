@@ -45,7 +45,7 @@
     (back-to-indentation)
     (point)))
 
-(defun typst-ts-core-line-bol-pos (&optional pos)
+(defun typst-ts-core-line-bol-nonwhite-pos (&optional pos)
   "POS."
   (save-excursion
     (when pos
@@ -102,7 +102,6 @@ TYPES is an regexp expression."
          (prev-node-type (treesit-node-type prev-node)))
     (while (and prev-node-type
                 (string-match-p types prev-node-type))
-      (message "%s" prev-node)
       (setq
        prev-node (treesit-node-prev-sibling prev-node)
        prev-node-type (treesit-node-type prev-node)))
