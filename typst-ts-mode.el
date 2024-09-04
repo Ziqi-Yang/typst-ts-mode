@@ -388,49 +388,6 @@ If you want to customize the rules, please customize the same name variable
     (markup-standard code-standard math-standard)
     (markup-extended code-extended math-extended)))
 
-(defun typst-ts-mode--identation-item-linebreak (_node _parent bol)
-  "Where the current line is underneath a item with linebreak as ending.
-Ignore whitespaces.
-BOL: beginning of the current line.
-See `treesit-simple-indent-rules'."
-  (when-let* ((prev-nonwhite-pos (save-excursion
-                                   (goto-char bol)
-                                   (skip-chars-backward "\s\r\n\t")
-                                   (1- (point))))
-              ((and (not (eq prev-nonwhite-pos 0))  ; first line
-                    (not (eq  ; has previous sibling
-                          (line-number-at-pos prev-nonwhite-pos)
-                          (line-number-at-pos (point))))))
-              (prev-nonwhite-line-node
-               (treesit-node-at prev-nonwhite-pos))
-              ((equal (treesit-node-type prev-nonwhite-line-node) "linebreak"))
-
-              (prev-nonwhite-line-heading-node
-               (save-excursion
-                 (goto-char prev-nonwhite-pos)
-                 (back-to-indentation)
-                 (treesit-node-at (point))))
-              ((equal (treesit-node-type prev-nonwhite-line-heading-node) "-"))
-
-              (prev-nonwhite-line-top-node (treesit-node-parent
-                                            prev-nonwhite-line-heading-node)))
-    (equal (treesit-node-type prev-nonwhite-line-top-node) "item")))
-
-(defun typst-ts-mode--indentation-item-linebreak-get-pos (_node _parent bol)
-  "Get the previous item indentation position.
-See `typst-ts-mode--identation-item-linebreak'.
-BOL: beginning of the current line.
-This function is used instead of `parent-bol' is to make sure in the situation
-where current point is point-max with no newline character at ending can also
-work well.  Example:
-1. el \\$
-    2. psy \\$
-        | <- insert cursor should be here."
-  (save-excursion
-    (goto-char bol)
-    (skip-chars-backward "\s\r\n\t")
-    (back-to-indentation)
-    (point)))
 
 (defun typst-ts-mode-indent--grand-parent-bol (_node parent _bol)
   "Return the grand parent beginning of line position.
@@ -471,12 +428,12 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
   ;; see `typst-ts-mode-electric-pair-open-newline-between-pairs-psif'
   ;; It may be better to turn off `electric-pair-open-newline-between-pairs'
   `((typst
-     ((lambda (node parent bol)  ; NOTE
-        (message "%s %s %s %s %s" node parent
-                 (treesit-node-parent parent)
-                 (treesit-node-parent (treesit-node-parent parent)) bol)
-        nil)
-      parent-bol 0)
+     ;; ((lambda (node parent bol)  ; NOTE
+     ;;    (message "%s %s %s %s %s" node parent
+     ;;             (treesit-node-parent parent)
+     ;;             (treesit-node-parent (treesit-node-parent parent)) bol)
+     ;;    nil)
+     ;;  parent-bol 0)
 
      ((and no-node (parent-is "source_file")) prev-line 0)
      ((parent-is "source_file") column-0 0)
@@ -501,12 +458,6 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
 
      ;; item - child item
      ((and (node-is "item") (parent-is "item")) parent-bol
-      typst-ts-mode-indent-offset)
-     
-     ;; TODO
-     ;; item - previous nonwhite line is item type and the ending is a linebreak
-     (typst-ts-mode--identation-item-linebreak
-      typst-ts-mode--indentation-item-linebreak-get-pos
       typst-ts-mode-indent-offset)
      
      ;; multi-line item
