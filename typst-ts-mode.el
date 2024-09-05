@@ -555,6 +555,7 @@ This function is meant to be used when user hits a return key."
          (grandparent-node (treesit-node-parent parent-node)))
     (and (equal (treesit-node-type node) "ident")
          (equal (treesit-node-type parent-node) "call")
+         (equal (treesit-node-field-name parent-node) "pattern")
          (equal (treesit-node-type grandparent-node) "let"))))
 
 (defun typst-ts-mode--imenu-name-function (node)
@@ -726,6 +727,14 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
 
   ;; Imenu
   (setq-local treesit-simple-imenu-settings
+              ;; Here we uses a trick. In the docs of
+              ;; `treesit-simple-imenu-settings', the second parameter should
+              ;; be a regexp string. However, it can be anything that
+              ;; the PRED in `treesit-thing-settings' can be
+              ;; For emacs 30, there are some restriction (second param must be
+              ;; regexp string) when you use default settings for outline
+              ;; (outline from imenu) see `treesit-major-mode-setup' and
+              ;; `treesit-outline-predicate'
               `(("Functions" typst-ts-mode--imenu-function-defintion-p nil
                  typst-ts-mode--imenu-name-function)
                 ("Headings" "^heading$" nil typst-ts-mode--imenu-name-function)))
@@ -737,7 +746,6 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
 
   ;; (setq-local treesit-thing-settings
   ;;             `((typst ())))
-
 
   ;; Outline
   (if nil  ; (>= emacs-major-version 30)
