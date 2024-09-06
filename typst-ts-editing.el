@@ -92,14 +92,15 @@ the `GLOBAL-MAP' (example: `right-word')."
 The new heading is created after the ending of current heading.
 Using ARG argument will ignore the context and it will insert a heading instead."
   (interactive "P")
-  (let ((node (treesit-parent-until
-               (treesit-node-at (line-beginning-position))
-               (lambda (node)
-                 (string= "item" (treesit-node-type node))))))
+  (let ((item-node (treesit-parent-until
+                    (treesit-node-at (line-beginning-position))
+                    (lambda (node)
+                      (string= "item" (treesit-node-type node)))))
+        (node (typst-ts-core-get-parent-of-node-at-bol-nonwhite)))
     (cond
      (arg (typst-ts-mode-insert--heading nil))
-     (node
-      (typst-ts-mode-insert--item node))
+     (item-node
+      (typst-ts-mode-insert--item item-node))
      (t
       (typst-ts-mode-insert--heading node)))))
 
