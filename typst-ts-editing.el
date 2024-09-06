@@ -149,8 +149,7 @@ When prefix ARG is non-nil, call global return function."
                        (call-interactively #'newline)
                      (typst-ts-mode-insert--item item-node))
                  ;; no text means delete the item on current line: (item -)
-                 (beginning-of-line)
-                 (delete-line)
+                 (delete-region (line-beginning-position) (line-end-position))
                  ;; whether the previous line is in an item
                  (let* ((prev-line-item-node
                          (typst-ts-core-parent-util-type
@@ -163,7 +162,7 @@ When prefix ARG is non-nil, call global return function."
                        (progn
                          ;; sometimes there is no newlines characters at the EOL
                          (ignore-errors
-                           (delete-line))
+                           (delete-region (line-beginning-position) (line-end-position)))
                          (forward-line -1)
                          (end-of-line)
                          (call-interactively #'newline))
@@ -277,7 +276,7 @@ When there is no section it will insert a heading below point."
                   (prev-significant-node-type
                    (treesit-node-type prev-significant-node))
                   prev-item-node)
-             
+
              (if (equal prev-significant-node-type "item")
                  (setq prev-item-node prev-significant-node)
                (if (equal
@@ -286,9 +285,9 @@ When there is no section it will insert a heading below point."
                      (treesit-node-parent prev-significant-node)))
                    (setq prev-item-node (treesit-node-parent
                                          prev-significant-node))))
-             
+
              ;; (message "%s, %s" cur-item-node prev-item-node)
-             
+
              (unless prev-item-node
                (throw 'execute-result 'default))
 
@@ -310,7 +309,7 @@ When there is no section it will insert a heading below point."
                   (- typst-ts-mode-indent-offset (abs offset)))))
 
              (throw 'execute-result 'success)))
-          
+
           (t nil)))))
     ;; execute default action if not successful
     (unless (eq execute-result 'success)
