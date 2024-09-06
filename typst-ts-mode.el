@@ -495,6 +495,19 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ((n-p-gp nil ,typst-ts-mode--container-node-types-regexp "section")
       grand-parent 0)
 
+     ;; special case, item child is container
+     ((lambda (_node parent _bol)
+        (and
+         (string= "item" (treesit-node-type (treesit-node-parent parent)))
+         (string-match-p typst-ts-mode--container-node-types-regexp
+                         (treesit-node-type parent))
+         (= (line-number-at-pos (treesit-node-start (treesit-node-child parent 2)))
+            (line-number-at-pos (treesit-node-start (treesit-node-child parent 3))))))
+      (lambda (node parent bol)
+        (typst-ts-mode--indentation-multiline-item-get-anchor node (treesit-node-parent parent) bol))
+      0)
+
+
      ;; inside container
      ((and no-node (n-p-gp nil "parbreak" ,typst-ts-mode--container-node-types-regexp))
       typst-ts-mode-indent--grand-parent-bol typst-ts-mode-indent-offset)
