@@ -295,10 +295,7 @@ If you want to customize the rules, please customize the same name variable
 
       :language typst
       :feature markup-extended
-      ,(if typst-ts-mode-font-lock-rules-markup-extended
-           typst-ts-mode-font-lock-rules-markup-extended
-         ;; still provide this option so that user have 3 levels of markup fontication
-         '(nil))
+      ,@typst-ts-mode-font-lock-rules-markup-extended
 
       ;; please note that some feature there also in the math mode
       :language typst
