@@ -440,6 +440,14 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
 
      ((n-p-gp ,(regexp-opt '(")" "]" "}" "$"))
               ,typst-ts-mode--container-node-types-regexp
+              "item")
+      (lambda (_node parent _bol)
+        (treesit-node-start
+         (treesit-node-child (treesit-node-parent parent) 1)))
+      0)
+
+     ((n-p-gp ,(regexp-opt '(")" "]" "}" "$"))
+              ,typst-ts-mode--container-node-types-regexp
               nil)
       parent-bol 0)
 
@@ -459,7 +467,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;; item - child item
      ((and (node-is "item") (parent-is "item")) parent-bol
       typst-ts-mode-indent-offset)
-     
+
      ;; multi-line item
      ;; -  #[hi] foo
      ;;    bar
@@ -467,7 +475,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;; `adaptive-fill-regexp'
      ((match nil "item" nil 2 nil)
       typst-ts-mode--indentation-multiline-item-get-anchor 0)
-     
+
      ;; item - new item content should follow its previous line's indentation
      ;; level
      ((and no-node
