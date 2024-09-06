@@ -124,18 +124,17 @@ When prefix ARG is non-nil, call global return function."
                               "item" t t)))
              (let* ((item-node node)
                     (has-children (treesit-node-child item-node 1))
+                    (next-line-pos
+                     (save-excursion
+                       (forward-line 1)
+                       (point)))
                     (next-line-node
                      (typst-ts-core-get-parent-of-node-at-bol-nonwhite
-                      (save-excursion
-                        (forward-line 1)
-                        (point))))
+                      next-line-pos))
                     (next-line-top-node  ; get container type or `item' type node
                      (typst-ts-core-parent-util-type
                       next-line-node
-                      (regexp-opt
-                       (append
-                        typst-ts-core--container-node-types
-                        '("item")))
+                      (regexp-opt '("code" "item"))
                       t)))
                (if has-children
                    ;; example:
@@ -145,10 +144,7 @@ When prefix ARG is non-nil, call global return function."
                             ;; end of buffer situation (or next line is the end
                             ;; line (and no newline character))
                             (not (equal
-                                  (line-number-at-pos
-                                   (save-excursion
-                                     (forward-line 1)
-                                     (point)))
+                                  (line-number-at-pos next-line-pos)
                                   (line-number-at-pos (point-max)))))
                        (call-interactively #'newline)
                      (typst-ts-mode-insert--item item-node))
