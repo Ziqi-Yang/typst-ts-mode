@@ -388,55 +388,6 @@ If you want to customize the rules, please customize the same name variable
     (markup-standard code-standard math-standard)
     (markup-extended code-extended math-extended)))
 
-(defconst typst-ts-mode--container-node-types-regexp
-  ;; '_math_group' here is because `treesit-parent-until' doesn't hanlde node type alias well
-  ;; TODO file a bug
-  (regexp-opt '("block" "content" "group" "math" "_math_group"))
-  "Container node types regexp.")
-
-(defun typst-ts-mode--identation-item-linebreak (_node _parent bol)
-  "Where the current line is underneath a item with linebreak as ending.
-Ignore whitespaces.
-BOL: beginning of the current line.
-See `treesit-simple-indent-rules'."
-  (when-let* ((prev-nonwhite-pos (save-excursion
-                                   (goto-char bol)
-                                   (skip-chars-backward "\s\r\n\t")
-                                   (1- (point))))
-              ((and (not (eq prev-nonwhite-pos 0))  ; first line
-                    (not (eq  ; has previous sibling
-                          (line-number-at-pos prev-nonwhite-pos)
-                          (line-number-at-pos (point))))))
-              (prev-nonwhite-line-node
-               (treesit-node-at prev-nonwhite-pos))
-              ((equal (treesit-node-type prev-nonwhite-line-node) "linebreak"))
-
-              (prev-nonwhite-line-heading-node
-               (save-excursion
-                 (goto-char prev-nonwhite-pos)
-                 (back-to-indentation)
-                 (treesit-node-at (point))))
-              ((equal (treesit-node-type prev-nonwhite-line-heading-node) "-"))
-
-              (prev-nonwhite-line-top-node (treesit-node-parent
-                                            prev-nonwhite-line-heading-node)))
-    (equal (treesit-node-type prev-nonwhite-line-top-node) "item")))
-
-(defun typst-ts-mode--indentation-item-linebreak-get-pos (_node _parent bol)
-  "Get the previous item indentation position.
-See `typst-ts-mode--identation-item-linebreak'.
-BOL: beginning of the current line.
-This function is used instead of `parent-bol' is to make sure in the situation
-where current point is point-max with no newline character at ending can also
-work well.  Example:
-1. el \\$
-    2. psy \\$
-        | <- insert cursor should be here."
-  (save-excursion
-    (goto-char bol)
-    (skip-chars-backward "\s\r\n\t")
-    (back-to-indentation)
-    (point)))
 
 (defun typst-ts-mode-indent--grand-parent-bol (_node parent _bol)
   "Return the grand parent beginning of line position.
@@ -503,34 +454,32 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      ;;   .split(" ")
      ((n-p-gp "." "field" nil) parent-bol typst-ts-mode-indent-offset)
 
-     ;; multi-line item
-     ;; - foo
-     ;;   bar
-     ((and (parent-is "item")
-           (lambda (node &rest parent bol)
-             (treesit-node-prev-sibling node)))
-      (lambda (node &rest parent bol)
-        (treesit-node-start (treesit-node-prev-sibling node)))
-      0)
+     ((parent-is "comment") prev-adaptive-prefix 0)
 
      ;; item - child item
-     ((and (node-is "item") (parent-is "item")) parent-bol typst-ts-mode-indent-offset)
-
-     ;; item - previous nonwhite line is item type and the ending is a linebreak
-     (typst-ts-mode--identation-item-linebreak
-      typst-ts-mode--indentation-item-linebreak-get-pos typst-ts-mode-indent-offset)
-
-     ;; item - item should follow its previous line item's indentation level
+     ((and (node-is "item") (parent-is "item")) parent-bol
+      typst-ts-mode-indent-offset)
+     
+     ;; multi-line item
+     ;; -  #[hi] foo
+     ;;    bar
+     ;; my try with `prev-adaptive-prefix' failed even after set the
+     ;; `adaptive-fill-regexp'
+     ((match nil "item" nil 2 nil)
+      typst-ts-mode--indentation-multiline-item-get-anchor 0)
+     
+     ;; item - new item content should follow its previous line's indentation
+     ;; level
      ((and no-node
-           (lambda (node parent &rest _)
-             (save-excursion
-               (forward-line -1)
-               (back-to-indentation)
-               (string= "item" (treesit-node-type
-                                (treesit-node-parent
-                                 (treesit-node-at (point))))))))
-      prev-line
-      0)
+           typst-ts-mode--indentation-prev-line-is-item-p
+           ;; not in container
+           ;; example:
+           ;; - hi
+           ;;   hi #[
+           ;;     - hello | <- return
+           ;;   ]
+           (not (n-p-gp nil "parbreak" ,typst-ts-mode--container-node-types-regexp)))
+      typst-ts-mode--indentation-multiline-item-get-anchor_ 0)
 
      ;; raw block
      ;; whether normally or in insertion, the current node is always nil...
@@ -560,6 +509,32 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      (catch-all prev-line 0)))
   "Tree-sitter indent rules for `typst-ts-mode'.")
 
+(defun typst-ts-mode--indentation-multiline-item-get-anchor (_node parent _bol)
+  "Return the start of second child of PARENT."
+  (treesit-node-start (treesit-node-child parent 1)))
+
+(defun typst-ts-mode--indentation-multiline-item-get-anchor_ (_node _parent _bol)
+  "Return the start of second child of the current item.
+This function is meant to be used when user hits a return key."
+  (treesit-node-start
+   (treesit-node-child
+    (typst-ts-core-parent-util-type
+     (treesit-node-at
+      (save-excursion
+        (forward-line -1)
+        (back-to-indentation)
+        (point)))
+     "item" t)
+    1)))
+
+(defun typst-ts-mode--indentation-prev-line-is-item-p (_node _parent _bol)
+  (save-excursion
+    (forward-line -1)
+    (back-to-indentation)
+    (typst-ts-core-parent-util-type
+     (treesit-node-at (point))
+     "item" t)))
+
 
 (defun typst-ts-mode-comment-setup()
   "Setup comment related stuffs for `typst-ts-mode'."
@@ -580,6 +555,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
          (grandparent-node (treesit-node-parent parent-node)))
     (and (equal (treesit-node-type node) "ident")
          (equal (treesit-node-type parent-node) "call")
+         (equal (treesit-node-field-name parent-node) "pattern")
          (equal (treesit-node-type grandparent-node) "let"))))
 
 (defun typst-ts-mode--imenu-name-function (node)
@@ -587,8 +563,12 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
   (treesit-node-text node))
 
 ;; outline-minor-mode
-(defconst typst-ts-mode-outline-regexp "^[[:space:]]*\\(=+\\) "
+(defconst typst-ts-mode-outline-regexp "^[[:space:]]*\\(=+\\)"
   "Regexp identifying Typst header.")
+
+(defconst typst-ts-mode-outline-heading-alist
+  '(("=" . 1) ("==" . 2) ("===" . 3) ("====" . 4) ("=====" . 5) ("======" . 6))
+  "See `outline-heading-alist'.")
 
 (defun typst-ts-mode-outline-level ()
   "Return the level of the heading at point."
@@ -695,6 +675,17 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
                (file-name-nondirectory buffer-file-name)
                typst-ts-compile-options))))
 
+  ;; Although without enabling `outline-minor-mode' also works, enabling it
+  ;; provides outline ellipsis (if you use `set-display-table-slot' to set)
+  (outline-minor-mode t)
+
+  ;; FIXME
+  ;; necessary for
+  ;; `typst-ts-mode-cycle'(`typst-ts-editing--indent-item-node-lines')
+  ;; since it calculate offset based on character
+  ;; (maybe also some indentation rules)
+  (indent-tabs-mode -1)
+
   (typst-ts-mode-check-grammar-version))
 
 ;;;###autoload
@@ -736,6 +727,14 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
 
   ;; Imenu
   (setq-local treesit-simple-imenu-settings
+              ;; Here we uses a trick. In the docs of
+              ;; `treesit-simple-imenu-settings', the second parameter should
+              ;; be a regexp string. However, it can be anything that
+              ;; the PRED in `treesit-thing-settings' can be
+              ;; For emacs 30, there are some restriction (second param must be
+              ;; regexp string) when you use default settings for outline
+              ;; (outline from imenu) see `treesit-major-mode-setup' and
+              ;; `treesit-outline-predicate'
               `(("Functions" typst-ts-mode--imenu-function-defintion-p nil
                  typst-ts-mode--imenu-name-function)
                 ("Headings" "^heading$" nil typst-ts-mode--imenu-name-function)))
@@ -748,17 +747,13 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
   ;; (setq-local treesit-thing-settings
   ;;             `((typst ())))
 
-
   ;; Outline
   (if nil  ; (>= emacs-major-version 30)
       ;; FIXME maybe it's a upstream bug. Circle top-level section will cycle all the content below
       (setq treesit-outline-predicate (regexp-opt '("section" "source_file")))
     (setq-local outline-regexp typst-ts-mode-outline-regexp)
     (setq-local outline-level #'typst-ts-mode-outline-level))
-  ;; Although without enabling `outline-minor-mode' also works, enabling it
-  ;; provides outline ellipsis
-  ;; TODO add it to after-hook
-  (outline-minor-mode t)
+  (setq-local outline-heading-alist typst-ts-mode-outline-heading-alist)
 
   (treesit-major-mode-setup)
 

@@ -104,36 +104,80 @@ Using ARG argument will ignore the context and it will insert a heading instead.
   "Handle RET depends on condition.
 When prefix ARG is non-nil, call global return function."
   (interactive "P")
-  (let (execute-result node)
+  (let (execute-result)
     (unless current-prefix-arg
       (setq
        execute-result
        (catch 'execute-result
-         (when-let* ((cur-pos (point))
-                     (cur-node (treesit-node-at cur-pos))
-                     (cur-node-type (treesit-node-type cur-node))
-                     (parent-node (treesit-node-parent cur-node))  ; could be nil
-                     (parent-node-type (treesit-node-type parent-node)))
+         (let* ((cur-pos (point))
+                (cur-node (treesit-node-at cur-pos))
+                (cur-node-type (treesit-node-type cur-node))
+                (parent-node (treesit-node-parent cur-node))  ; could be nil
+                (parent-node-type (treesit-node-type parent-node))
+                node)
            ;; (message "%s %s" cur-node parent-node)
            (cond
-            (arg (throw 'execute-result 'default))
             ;; on item node end
             ((and (eolp)
-                  (setq node (typst-ts-core-get-parent-of-node-at-bol-nonwhite))
-                  (equal (treesit-node-type node) "item"))
-             (if (> (treesit-node-child-count node) 1)
-                 (typst-ts-mode-insert--item node)
-               ;; no text means delete the item on current line: (item -) instead of (item - (text))
-               (beginning-of-line)
-               (kill-line)
-               (indent-according-to-mode))
+                  (setq node (typst-ts-core-parent-util-type
+                              (typst-ts-core-get-parent-of-node-at-bol-nonwhite)
+                              "item" t t)))
+             (let* ((item-node node)
+                    (has-children (treesit-node-child item-node 1))
+                    (next-line-node
+                     (typst-ts-core-get-parent-of-node-at-bol-nonwhite
+                      (save-excursion
+                        (forward-line 1)
+                        (point))))
+                    (next-line-top-node  ; get container type or `item' type node
+                     (typst-ts-core-parent-util-type
+                      next-line-node
+                      (regexp-opt
+                       (append
+                        typst-ts-core--container-node-types
+                        '("item")))
+                      t)))
+               (if has-children
+                   ;; example:
+                   ;; - #[| <- return
+                   ;; ]
+                   (if (and next-line-top-node
+                            ;; end of buffer situation (or next line is the end
+                            ;; line (and no newline character))
+                            (not (equal
+                                  (line-number-at-pos
+                                   (save-excursion
+                                     (forward-line 1)
+                                     (point)))
+                                  (line-number-at-pos (point-max)))))
+                       (call-interactively #'newline)
+                     (typst-ts-mode-insert--item item-node))
+                 ;; no text means delete the item on current line: (item -)
+                 (beginning-of-line)
+                 (kill-line)
+                 ;; whether the previous line is in an item
+                 (let* ((prev-line-item-node
+                         (typst-ts-core-parent-util-type
+                          (typst-ts-core-get-parent-of-node-at-bol-nonwhite
+                           (save-excursion
+                             (forward-line -1)
+                             (point)))
+                          "item" t t)))
+                   (if prev-line-item-node
+                       (progn
+                         ;; sometimes there is no newlines characters at the EOL
+                         (ignore-errors
+                           (kill-line))
+                         (forward-line -1)
+                         (end-of-line)
+                         (call-interactively #'newline))
+                     (indent-according-to-mode)))))
              (throw 'execute-result 'success))
             )))))
     ;; execute default action if not successful
     (unless (eq execute-result 'success)
       ;; we only need to look for global keybinding, see `(elisp) Active Keymaps'
-      (let ((global-ret-function
-             (global-key-binding (kbd "RET"))))
+      (let ((global-ret-function (global-key-binding (kbd "RET"))))
         (if (not current-prefix-arg)
             (call-interactively global-ret-function)
           (if (yes-or-no-p
@@ -188,10 +232,25 @@ When there is no section it will insert a heading below point."
     (insert heading-level " ")
     (indent-according-to-mode)))
 
+(defun typst-ts-editing--indent-item-node-lines (node offset)
+  (let ((item-node-min-column
+         (typst-ts-core-column-at-pos
+          (typst-ts-core-line-bol-nonwhite-pos
+           (treesit-node-start node)))))
+    (if (< (+ item-node-min-column offset) 0)
+        (setq offset (- item-node-min-column)))
+    (typst-ts-core-for-lines-covered-by-node
+     node
+     (lambda ()
+       (indent-line-to
+        (+ (typst-ts-core-column-at-pos
+            (typst-ts-core-line-bol-nonwhite-pos))
+           offset))))))
+
 (defun typst-ts-mode-cycle (&optional _arg)
   "Cycle."
   (interactive "P")
-  (let (execute-result)
+  (let (execute-result node)
     (setq
      execute-result
      ;; plz manually throw `\'success' to `execute-result'
@@ -199,6 +258,10 @@ When there is no section it will insert a heading below point."
        (when-let* ((cur-pos (point))
                    (cur-node (treesit-node-at cur-pos))
                    (cur-node-type (treesit-node-type cur-node))
+                   (cur-line-nonwhite-bol-node
+                    (typst-ts-core-get-node-at-bol-nonwhite))
+                   (cur-line-nonwhite-bol-node-type
+                    (treesit-node-type cur-line-nonwhite-bol-node))
                    (parent-node (treesit-node-parent cur-node))  ; could be nil
                    (parent-node-type (treesit-node-type parent-node)))
          (cond
@@ -206,56 +269,52 @@ When there is no section it will insert a heading below point."
            (insert-tab)
            (throw 'execute-result 'success))
 
-          ((or (equal cur-node-type "parbreak")
-               (equal parent-node-type "item")
-               ;; please turn on whitespace-mode to test the following conditions
-               (eobp)
-               (eq (point) (1- (point-max))))
-           (when-let* ((cur-line-bol
-                        (save-excursion
-                          (back-to-indentation)
-                          (point)))
-                       (prev-nonwhite-pos (save-excursion
-                                            (goto-char cur-line-bol)
-                                            (skip-chars-backward "\s\r\n\t")
-                                            (1- (point))))
-                       ((and (not (eq prev-nonwhite-pos 0))  ; first line
-                             (not (eq  ; has previous sibling
-                                   (line-number-at-pos prev-nonwhite-pos)
-                                   (line-number-at-pos (point))))))
-                       (prev-nonwhite-line-node
-                        (treesit-node-at prev-nonwhite-pos))
-                       (prev-nonwhite-line-bol
-                        ;; TODO typst-ts-core-get-node-bol
-                        (save-excursion
-                          (goto-char prev-nonwhite-pos)
-                          (back-to-indentation)
-                          (point)))
-                       (prev-nonwhite-line-top-node
-                        (treesit-node-parent
-                         (treesit-node-at prev-nonwhite-line-bol)))
-                       (cur-line-bol-column (typst-ts-core-column-at-pos cur-line-bol))
-                       (prev-nonwhite-line-bol-column
-                        (typst-ts-core-column-at-pos prev-nonwhite-line-bol)))
-             (cond
-              ;; 1. el
-              ;; 2. psy| <- can toggle indent
-              ((and
-                (equal (treesit-node-type prev-nonwhite-line-top-node) "item")
-                ;; previous nonwhite-line ending is not '\' character
-                (not (equal (treesit-node-type prev-nonwhite-line-node) "linebreak")))
-               ;; TODO cycle all its children
-               (let (point)
-                 (if (not (eq cur-line-bol-column prev-nonwhite-line-bol-column))
-                     (progn
-                       (setq point (point))
-                       (indent-line-to prev-nonwhite-line-bol-column)
-                       (goto-char (- point typst-ts-mode-indent-offset)))
-                   (setq point (point))
-                   (indent-line-to (+ typst-ts-mode-indent-offset
-                                      prev-nonwhite-line-bol-column))
-                   (goto-char (+ typst-ts-mode-indent-offset point)))
-                 (throw 'execute-result 'success))))))
+
+          ((setq node
+                 (typst-ts-core-parent-util-type
+                  cur-line-nonwhite-bol-node "item" t t))
+           (let* ((cur-item-node node)
+                  (prev-significant-node
+                   (typst-ts-core-prev-sibling-ignore-types
+                    cur-item-node
+                    "parbreak"))
+                  (prev-significant-node-type
+                   (treesit-node-type prev-significant-node))
+                  prev-item-node)
+             
+             (if (equal prev-significant-node-type "item")
+                 (setq prev-item-node prev-significant-node)
+               (if (equal
+                    "item"
+                    (treesit-node-type
+                     (treesit-node-parent prev-significant-node)))
+                   (setq prev-item-node (treesit-node-parent
+                                         prev-significant-node))))
+             
+             ;; (message "%s, %s" cur-item-node prev-item-node)
+             
+             (unless prev-item-node
+               (throw 'execute-result 'default))
+
+             (let* ((cur-item-node-start-column
+                     (typst-ts-core-column-at-pos
+                      (treesit-node-start cur-item-node)))
+                    (prev-item-node-start-column
+                     (typst-ts-core-column-at-pos
+                      (treesit-node-start prev-item-node)))
+                    (offset
+                     (- cur-item-node-start-column
+                        prev-item-node-start-column)))
+               (if (>= offset typst-ts-mode-indent-offset)
+                   (typst-ts-editing--indent-item-node-lines
+                    cur-item-node
+                    (- (+ offset typst-ts-mode-indent-offset)))
+                 (typst-ts-editing--indent-item-node-lines
+                  cur-item-node
+                  (- typst-ts-mode-indent-offset (abs offset)))))
+
+             (throw 'execute-result 'success)))
+          
           (t nil)))))
     ;; execute default action if not successful
     (unless (eq execute-result 'success)

@@ -32,6 +32,15 @@
   :type 'natnum
   :group 'typst-ts)
 
+(defconst typst-ts-core--container-node-types
+  ;; '_math_group' here is because `treesit-parent-until' doesn't hanlde node type alias well
+  ;; TODO file a bug
+  '("block" "content" "group" "math" "_math_group"))
+
+(defconst typst-ts-mode--container-node-types-regexp
+  (regexp-opt typst-ts-core--container-node-types)
+  "Container node types regexp.")
+
 (defun typst-ts-core-column-at-pos (point)
   "Get the column at position POINT."
   (save-excursion
@@ -42,6 +51,14 @@
   "Get the NODE's indentation offset (at node beginning)."
   (save-excursion
     (goto-char (treesit-node-start node))
+    (back-to-indentation)
+    (point)))
+
+(defun typst-ts-core-line-bol-nonwhite-pos (&optional pos)
+  "POS."
+  (save-excursion
+    (when pos
+      (goto-char pos))
     (back-to-indentation)
     (point)))
 
@@ -59,6 +76,62 @@ If POS is given, operate on the line that POS locates at."
 POS.  May return nil."
   (treesit-node-parent
    (typst-ts-core-get-node-at-bol-nonwhite pos)))
+
+(defun typst-ts-core-for-lines-covered-by-node (node fn)
+  "Execute FN on all lines covered by NODE.
+Currently the effect of FN shouldn't change line number."
+  (let ((ns (treesit-node-start node))
+        ;; use line number not position since when editing, position of node end
+        ;; changes, but the information is not updated
+        (ne-line-num (line-number-at-pos (treesit-node-end node))))
+    (save-excursion
+      (goto-char ns)
+      (while (< (line-number-at-pos) ne-line-num)
+        (funcall fn)
+        (forward-line 1))
+      ;; in case the last line is the last line of buffer, we separate this
+      ;; operation from while loop
+      (funcall fn))))
+
+
+;; Emacs 29 doesn't support string type PRED, so this function is created for
+;; convenience
+(defun typst-ts-core-parent-util-type (node type &optional include-node same-context)
+  "See `treesit-parent-until'.
+TYPE is an regexp expression for matching types.
+SAME-CONTEXT: whether the parent should be in the current context with NODE.
+The following example means parent item node is in a different context with
+`hi' text node
+- #[
+hi
+]
+NODE TYPE INCLUDE-NODE see `treesit-parent-until'."
+  (let ((matched-node
+         (treesit-parent-until
+          node
+          (lambda (node)
+            (let ((node-type (treesit-node-type node)))
+              (or (and same-context
+                       (string-match-p
+                        typst-ts-mode--container-node-types-regexp node-type))
+                  (string-match-p type node-type))))
+          include-node)))
+    (when (and matched-node
+               (string-match-p type (treesit-node-type matched-node)))
+      matched-node)))
+
+(defun typst-ts-core-prev-sibling-ignore-types (node types)
+  "Find previous sibling node ignoring nodes whose type matches TYPES.
+NODE: current node.
+TYPES is an regexp expression."
+  (let* ((prev-node (treesit-node-prev-sibling node))
+         (prev-node-type (treesit-node-type prev-node)))
+    (while (and prev-node-type
+                (string-match-p types prev-node-type))
+      (setq
+       prev-node (treesit-node-prev-sibling prev-node)
+       prev-node-type (treesit-node-type prev-node)))
+    prev-node))
 
 (defun typst-ts-core-node-get (node instructions)
   "Get things from NODE by INSTRUCTIONS.
