@@ -154,7 +154,7 @@ When prefix ARG is non-nil, call global return function."
                      (typst-ts-mode-insert--item item-node))
                  ;; no text means delete the item on current line: (item -)
                  (beginning-of-line)
-                 (kill-line)
+                 (delete-line)
                  ;; whether the previous line is in an item
                  (let* ((prev-line-item-node
                          (typst-ts-core-parent-util-type
@@ -167,7 +167,7 @@ When prefix ARG is non-nil, call global return function."
                        (progn
                          ;; sometimes there is no newlines characters at the EOL
                          (ignore-errors
-                           (kill-line))
+                           (delete-line))
                          (forward-line -1)
                          (end-of-line)
                          (call-interactively #'newline))
