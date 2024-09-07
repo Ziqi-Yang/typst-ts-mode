@@ -470,6 +470,8 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
      
      ;; item - new item content should follow its previous line's indentation
      ;; level
+     ;; e.g.
+     ;; -  hi | <- return (newline command)
      ((and no-node
            typst-ts-mode--indentation-prev-line-is-item-p
            ;; not in container
@@ -478,7 +480,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
            ;;   hi #[
            ;;     - hello | <- return
            ;;   ]
-           (not (n-p-gp nil "parbreak" "code")))
+           (not (n-p-gp nil "parbreak" ,typst-ts-mode--container-node-types-regexp)))
       typst-ts-mode--indentation-multiline-item-get-anchor_ 0)
 
      ;; raw block
