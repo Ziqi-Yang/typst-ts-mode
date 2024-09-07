@@ -164,9 +164,7 @@ When prefix ARG is non-nil, call global return function."
                           "item" t t)))
                    (if prev-line-item-node
                        (progn
-                         ;; sometimes there is no newlines characters at the EOL
-                         (ignore-errors
-                           (delete-region (line-beginning-position) (line-end-position)))
+                         (delete-line)
                          (forward-line -1)
                          (end-of-line)
                          (call-interactively #'newline))
