@@ -295,7 +295,8 @@ If you want to customize the rules, please customize the same name variable
 
       :language typst
       :feature markup-extended
-      ,@typst-ts-mode-font-lock-rules-markup-extended
+      ,@(when typst-ts-mode-font-lock-rules-markup-extended
+          (list typst-ts-mode-font-lock-rules-markup-extended))
 
       ;; please note that some feature there also in the math mode
       :language typst
