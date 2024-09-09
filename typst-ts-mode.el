@@ -481,7 +481,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
            ;;   hi #[
            ;;     - hello | <- return
            ;;   ]
-           (not (n-p-gp nil "parbreak" ,typst-ts-mode--container-node-types-regexp)))
+           typst-ts-mode--indentation-editing-not-inside-code-container-p)
       typst-ts-mode--indentation-multiline-item-get-anchor_ 0)
 
      ;; raw block
@@ -497,19 +497,6 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
       great-grand-parent 0)
      ((n-p-gp nil ,typst-ts-mode--container-node-types-regexp "section")
       grand-parent 0)
-
-     ;; special case, item child is container
-     ((lambda (_node parent _bol)
-        (and
-         (string= "item" (treesit-node-type (treesit-node-parent parent)))
-         (string-match-p typst-ts-mode--container-node-types-regexp
-                         (treesit-node-type parent))
-         (= (line-number-at-pos (treesit-node-start (treesit-node-child parent 2)))
-            (line-number-at-pos (treesit-node-start (treesit-node-child parent 3))))))
-      (lambda (node parent bol)
-        (typst-ts-mode--indentation-multiline-item-get-anchor node (treesit-node-parent parent) bol))
-      0)
-
 
      ;; inside container
      ((and no-node (n-p-gp nil "parbreak" ,typst-ts-mode--container-node-types-regexp))
@@ -550,6 +537,17 @@ This function is meant to be used when user hits a return key."
     (typst-ts-core-parent-util-type
      (treesit-node-at (point))
      "item" t)))
+
+(defun typst-ts-mode--indentation-editing-not-inside-code-container-p
+    (node parent _bol)
+  "NODE, PARENT and BOL see `treesit-simple-indent-rules'."
+  (let* ((gp-node (treesit-node-parent parent))
+         (ggp-node (treesit-node-parent gp-node)))
+    (not (and
+          (null node)
+          (equal (treesit-node-type parent) "parbreak")
+          (equal (treesit-node-type gp-node) "content")
+          (equal (treesit-node-type ggp-node) "code")))))
 
 
 (defun typst-ts-mode-comment-setup()
