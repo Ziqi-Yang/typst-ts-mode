@@ -272,18 +272,20 @@ If you want to customize the rules, please customize the same name variable
            typst-ts-mode-font-lock-rules-comment
          '((comment) @font-lock-comment-face))
 
+      ;; `ref' should be placed before `shorthand' to render properly
+      ;; e.g. @CitationKey[p.~7]
+      :language typst
+      :feature markup-basic
+      ,(if typst-ts-mode-font-lock-rules-markup-basic
+           typst-ts-mode-font-lock-rules-markup-basic
+         markup-basic)
+      
       :language typst
       :feature common
       ,(if typst-ts-mode-font-lock-rules-common
            typst-ts-mode-font-lock-rules-common
          '((shorthand) @typst-ts-shorthand-face
            (ERROR) @typst-ts-error-face))
-
-      :language typst
-      :feature markup-basic
-      ,(if typst-ts-mode-font-lock-rules-markup-basic
-           typst-ts-mode-font-lock-rules-markup-basic
-         markup-basic)
 
       :language typst
       :feature markup-standard
