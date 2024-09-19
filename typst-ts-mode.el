@@ -605,10 +605,10 @@ FILE: file path for the result compile file."
 
 ;;;###autoload
 (defvar-keymap typst-ts-mode-map
-  "C-c C-c c" #'typst-ts-compile-and-preview
-  "C-c C-c C" #'typst-ts-compile
-  "C-c C-c w" #'typst-ts-watch-mode
-  "C-c C-c p" #'typst-ts-mode-preview
+  "C-c C-c" #'typst-ts-compile-and-preview
+  "C-u C-c C-c" #'typst-ts-compile
+  "C-c C-w" #'typst-ts-watch-mode
+  "C-c C-p" #'typst-ts-mode-preview
 
   "M-<left>" #'typst-ts-mode-heading-decrease
   "M-<right>" #'typst-ts-mode-heading-increase
