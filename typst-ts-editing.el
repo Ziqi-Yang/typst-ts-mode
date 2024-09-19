@@ -57,12 +57,115 @@ Return the heading node when yes otherwise nil."
         node
       nil)))
 
+(defun test ()
+  (interactive)
+  (message "%s" (treesit-node-text
+                 (treesit-node-child (treesit-parent-until
+                                      (treesit-node-at (point))
+                                      (lambda (x) (string= "item" (treesit-node-type x))))
+                                     0))))
+
+(defun typst-ts-mode-item--at-point-p ()
+  "Return (prev current next) items.
+
+When there are no item nodes return for the specific list index will be nil.
+Being a different item type does not count as sibling either, ex:
+1. foo
+- bar
+
+When point is not on an item node return nil."
+  (let* ((item-p (lambda (x) (string= (treesit-node-type x)
+                                      "item")))
+         (node (treesit-parent-until (treesit-node-at (point))
+                                     item-p))
+         (get-item-type (lambda (x)
+                          (treesit-node-text (treesit-node-child x 0))))
+         (item-type (funcall get-item-type node))
+         (node-numbered-p (not (= (string-to-number item-type) 0)))
+         (same-item-type (lambda (x)
+                           (let ((type (funcall get-item-type x)))
+                             (or (string= type item-type)
+                                 ;; are they numbers?
+                                 (and node-numbered-p
+                                      (not (= (string-to-number type) 0)))))))
+         (only-if (lambda (x) (and (funcall item-p x)
+                                   (funcall same-item-type x)
+                                   x))))
+    (cond
+     ((not node) node)
+     (node (list (funcall only-if (treesit-node-prev-sibling node))
+                 node
+                 (funcall only-if (treesit-node-next-sibling node)))))))
+
+(defun typst-ts-mode--swap-regions (start1 end1 start2 end2)
+  "Swap region between START1 and END1 with region between START2 and END2."
+  (let ((text1 (buffer-substring start1 end1))
+        (text2 (buffer-substring start2 end2))
+        (marker1-start (make-marker))
+        (marker1-end (make-marker))
+        (marker2-start (make-marker))
+        (marker2-end (make-marker)))
+    (set-marker marker1-start start1)
+    (set-marker marker1-end end1)
+    (set-marker marker2-start start2)
+    (set-marker marker2-end end2)
+
+    (delete-region marker1-start marker1-end)
+    (delete-region marker2-start marker2-end)
+
+    (goto-char marker1-start)
+    (insert text2)
+
+    (goto-char marker2-start)
+    (insert text1)
+
+    (set-marker marker1-start nil)
+    (set-marker marker1-end nil)
+    (set-marker marker2-start nil)
+    (set-marker marker2-end nil)))
+
+(defun typst-ts-mode-item--move (direction)
+  "Moves item node up or down (swap).
+DIRECTION should be `up' or `down'."
+  (let (previous current next swap-with)
+    (seq-setq (previous current next) (typst-ts-mode-item--at-point-p))
+    (unless current
+      (error "Point is not on an item"))
+    (pcase direction
+      ('up
+       (setq swap-with previous))
+      ('down
+       (setq swap-with next))
+      (_ (error "%s is not one of: `up' `down'" direction)))
+    (unless swap-with
+      (user-error "There is no %s item to swap with"
+                  (if (eq direction 'up) "previous" "next")))
+    (let ((current-begin (treesit-node-start current))
+          (current-end (treesit-node-end current))
+          (other-begin (treesit-node-start previous))
+          (other-end (treesit-node-end previous)))
+      (typst-ts-mode--swap-regions current-begin current-end
+                                   other-begin other-end))))
+
+(defun typst-ts-mode-item-up ()
+  "Move the item at point up."
+  (interactive)
+  (typst-ts-mode-item--move 'up))
+
+(defun typst-ts-mode-item-down ()
+  "Move the item at point down."
+  (interactive)
+  (typst-ts-mode-item--move 'down))
+
 (defun typst-ts-mode-meta--dwim (direction)
   "Do something depending on the context with meta key + DIRECTION.
+
+When point is at heading:
 `left': `typst-ts-mode-heading-decrease',
 `right': `typst-ts-mode-heading-increase',
 `up': `typst-ts-mode-heading-up',
 `down': `typst-ts-mode-heading-down'.
+
 When there is no relevant action to do it will execute the relevant function in
 the `GLOBAL-MAP' (example: `right-word')."
   (let ((heading (typst-ts-mode-heading--at-point-p))
