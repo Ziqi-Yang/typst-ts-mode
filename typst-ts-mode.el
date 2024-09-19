@@ -605,8 +605,7 @@ FILE: file path for the result compile file."
 
 ;;;###autoload
 (defvar-keymap typst-ts-mode-map
-  "C-c C-c" #'typst-ts-compile-and-preview
-  "C-u C-c C-c" #'typst-ts-compile
+  "C-c C-c" #'typst-ts-compile  ; use prefix argument to do preview
   "C-c C-w" #'typst-ts-watch-mode
   "C-c C-p" #'typst-ts-mode-preview
 

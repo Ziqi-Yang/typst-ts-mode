@@ -63,9 +63,15 @@ compilation buffer before compilation."
       (remove-hook 'compilation-finish-functions
                    (typst-ts-compile--compilation-finish-function cur-buffer)))))
 
-(defun typst-ts-compile ()
-  "Compile current typst file."
-  (interactive)
+(defun typst-ts-compile (&optional arg)
+  "Compile current typst file.
+When use a prefix argument, then preview the document after compilation.
+ARG: prefix argument."
+  (interactive "P")
+  (when arg
+    (add-hook 'compilation-finish-functions
+              (typst-ts-mode-compile-and-preview--compilation-finish-function
+               (current-buffer))))
   (run-hooks typst-ts-compile-before-compilation-hook)
 
   ;; The reason to take such a awkward solution is that `compilation-finish-functions'
