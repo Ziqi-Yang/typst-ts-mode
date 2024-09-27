@@ -610,10 +610,10 @@ FILE: file path for the result compile file."
   "C-c C-w" #'typst-ts-watch-mode
   "C-c C-p" #'typst-ts-mode-preview
 
-  "M-<left>" #'typst-ts-mode-heading-decrease
-  "M-<right>" #'typst-ts-mode-heading-increase
-  "M-<down>" #'typst-ts-mode-heading-down
-  "M-<up>" #'typst-ts-mode-heading-up
+  "M-<left>" #'typst-ts-mode-meta-left
+  "M-<right>" #'typst-ts-mode-meta-right
+  "M-<down>" #'typst-ts-mode-meta-down
+  "M-<up>" #'typst-ts-mode-meta-up
   "M-<return>" #'typst-ts-mode-meta-return
 
   ;; don't bind <return>
