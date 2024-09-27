@@ -28,22 +28,22 @@
 (defun typst-ts-mode-heading-up ()
   "Switch the current heading with the heading above."
   (interactive)
-  (typst-ts-mode-meta--dwim 'up))
+  (call-interactively #'outline-move-subtree-up))
 
 (defun typst-ts-mode-heading-down ()
   "Switch the current heading with the heading below."
   (interactive)
-  (typst-ts-mode-meta--dwim 'down))
+  (call-interactively #'outline-move-subtree-down))
 
-(defun typst-ts-mode-heading-increase ()
+(defun typst-ts-mode-heading-left ()
   "Increase the heading level."
   (interactive)
-  (typst-ts-mode-meta--dwim 'right))
+  (call-interactively #'outline-promote))
 
-(defun typst-ts-mode-heading-decrease ()
+(defun typst-ts-mode-heading-right ()
   "Decrease heading level."
   (interactive)
-  (typst-ts-mode-meta--dwim 'left))
+  (call-interactively #'outline-demote))
 
 (defun typst-ts-mode-heading--at-point-p ()
   "Whether the current line is a heading.
@@ -57,35 +57,191 @@ Return the heading node when yes otherwise nil."
         node
       nil)))
 
+(defun typst-ts-mode-item--at-point-p ()
+  "Return item node when point is on item.
+Otherwise nil."
+  (treesit-parent-until (treesit-node-at (point))
+                        (lambda (x) (string= (treesit-node-type x)
+                                             "item"))))
+
+(defun typst-ts-mode-item--with-siblings ()
+  "Return (prev current next numbered-p) items.
+
+The last item in the last tells you if the list is numbered (t) or not (nil).
+
+When current does not have a previous or next sibling,
+the index for it will be nil.
+
+Being a different item type does not count as sibling, ex:
+1. foo
+- bar
+
+When point is not on an item node return nil."
+  (when-let* ((node (typst-ts-mode-item--at-point-p))
+              (get-item-type (lambda (x)
+                               (treesit-node-text (treesit-node-child x 0))))
+              (item-type (funcall get-item-type node))
+              (node-numbered-p t)
+              (same-item-type (lambda (x)
+                                (let ((type (funcall get-item-type x)))
+                                  (or (string= type item-type)
+                                      ;; are they numbers?
+                                      (and node-numbered-p
+                                           (not (= (string-to-number type)
+                                                   0)))))))
+              (only-if (lambda (x) (and (string= (treesit-node-type x)
+                                                 "item")
+                                        (funcall same-item-type x)
+                                        x))))
+    (setq node-numbered-p (not (= (string-to-number item-type) 0)))
+    (cond
+     ((not node) node)
+     (node (list (funcall only-if (treesit-node-prev-sibling node))
+                 node
+                 (funcall only-if (treesit-node-next-sibling node))
+                 node-numbered-p)))))
+
+(defun typst-ts-mode--swap-regions (start1 end1 start2 end2)
+  "Swap region between START1 and END1 with region between START2 and END2."
+  (let ((text1 (buffer-substring start1 end1))
+        (text2 (buffer-substring start2 end2))
+        (marker1-start (make-marker))
+        (marker1-end (make-marker))
+        (marker2-start (make-marker))
+        (marker2-end (make-marker)))
+    (set-marker marker1-start start1)
+    (set-marker marker1-end end1)
+    (set-marker marker2-start start2)
+    (set-marker marker2-end end2)
+
+    (delete-region marker1-start marker1-end)
+    (delete-region marker2-start marker2-end)
+
+    (goto-char marker1-start)
+    (insert text2)
+
+    (goto-char marker2-start)
+    (insert text1)
+
+    (set-marker marker1-start nil)
+    (set-marker marker1-end nil)
+    (set-marker marker2-start nil)
+    (set-marker marker2-end nil)))
+
+(defun typst-ts-mode-item--move (direction)
+  "Moves item node up or down (swap).
+DIRECTION should be `up' or `down'."
+  (let* ( previous current next swap-with numbered-p
+          (bind (lambda ()
+                  (pcase direction
+                    ('up
+                     (setq swap-with previous))
+                    ('down
+                     (setq swap-with next))
+                    (_ (error "%s is not one of: `up' `down'" direction))))))
+    (seq-setq (previous current next numbered-p)
+              (typst-ts-mode-item--with-siblings))
+    (unless current
+      (error "Point is not on an item"))
+    (funcall bind)
+    (unless swap-with
+      (user-error "There is no %s item to swap with"
+                  (if (eq direction 'up) "previous" "next")))
+    ;; numbers may need to be swapped
+    (when numbered-p
+      (let* ((number1 (treesit-node-child current 0))
+             (number2 (treesit-node-child swap-with 0))
+             (current-begin (treesit-node-start number1))
+             (current-end (treesit-node-end number1))
+             (other-begin (treesit-node-start number2))
+             (other-end (treesit-node-end number2)))
+        (save-excursion
+          (typst-ts-mode--swap-regions current-begin current-end
+                                       other-begin other-end))))
+    ;; the nodes must be reinitialized
+    (seq-setq (previous current next numbered-p)
+              (typst-ts-mode-item--with-siblings))
+    (funcall bind)
+    (let ((current-begin (treesit-node-start current))
+          (current-end (treesit-node-end current))
+          (other-begin (treesit-node-start swap-with))
+          (other-end (treesit-node-end swap-with))
+          (column (current-column)))
+      (typst-ts-mode--swap-regions current-begin current-end
+                                   other-begin other-end)
+      (move-to-column column))))
+
+(defun typst-ts-mode-item-up ()
+  "Move the item at point up."
+  (interactive)
+  (typst-ts-mode-item--move 'up))
+
+(defun typst-ts-mode-item-down ()
+  "Move the item at point down."
+  (interactive)
+  (typst-ts-mode-item--move 'down))
+
+(defun typst-ts-mode-meta-up ()
+  "See `typst-ts-mode-meta--dwim'."
+  (interactive)
+  (call-interactively (typst-ts-mode-meta--dwim 'up)))
+
+(defun typst-ts-mode-meta-down ()
+  "See `typst-ts-mode-meta--dwim'."
+  (interactive)
+  (message "%s" (typst-ts-mode-meta--dwim 'down))
+  (call-interactively (typst-ts-mode-meta--dwim 'down)))
+
+(defun typst-ts-mode-meta-left ()
+  "See `typst-ts-mode-meta--dwim'."
+  (interactive)
+  (call-interactively (typst-ts-mode-meta--dwim 'left)))
+
+(defun typst-ts-mode-meta-right ()
+  "See `typst-ts-mode-meta--dwim'."
+  (interactive)
+  (call-interactively (typst-ts-mode-meta--dwim 'right)))
+
 (defun typst-ts-mode-meta--dwim (direction)
-  "Do something depending on the context with meta key + DIRECTION.
+  "Return function depending on the context with meta key + DIRECTION.
+
+When point is at heading:
 `left': `typst-ts-mode-heading-decrease',
 `right': `typst-ts-mode-heading-increase',
 `up': `typst-ts-mode-heading-up',
 `down': `typst-ts-mode-heading-down'.
-When there is no relevant action to do it will execute the relevant function in
+
+When point is at item list:
+`up': `typst-ts-mode-item-up'
+`down': `typst-ts-mode-item-down'
+
+When there is no relevant action to do it will return the relevant function in
 the `GLOBAL-MAP' (example: `right-word')."
-  (let ((heading (typst-ts-mode-heading--at-point-p))
-        ;; car function, cdr string of function for `substitute-command-keys'
-        (call-me/string
-         (pcase direction
-           ('left
-            (cons #'outline-promote
-                  "\\[typst-ts-mode-heading-decrease]"))
-           ('right
-            (cons #'outline-demote
-                  "\\[typst-ts-mode-heading-decrease]"))
-           ('up
-            (cons #'outline-move-subtree-up
-                  "\\[typst-ts-mode-heading-up]"))
-           ('down
-            (cons #'outline-move-subtree-down
-                  "\\[typst-ts-mode-heading-down]"))
-           (_ (error "%s is not one of: `right' `left'" direction)))))
-    (if heading
-        (call-interactively (car call-me/string))
-      (call-interactively
-       (keymap-lookup global-map (substitute-command-keys (cdr call-me/string)))))))
+  (let* ((prefix "typst-ts-mode-")
+         (mid (cond
+               ((typst-ts-mode-heading--at-point-p) "heading")
+               ((and (typst-ts-mode-item--at-point-p)
+                     ;; does not exist, maybe will exist at some point
+                     (not (or (eq 'left direction)
+                              (eq 'right direction))))
+                "item")
+               (t nil)))
+         (end
+          (pcase direction
+            ('left
+             "-left")
+            ('right
+             "-right")
+            ('up
+             "-up")
+            ('down
+             "-down")
+            (_ (error "DIRECTION: %s is not one of: `right' `left', `up', `down'"
+                      direction)))))
+    (if (not mid)
+        (keymap-lookup global-map (substitute-command-keys
+                                   (concat "\\[" prefix "meta" end "]")))
+      (intern-soft (concat prefix mid end)))))
 
 (defun typst-ts-mode-meta-return (&optional arg)
   "Depending on context, insert a heading or insert an item.
