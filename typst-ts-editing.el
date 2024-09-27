@@ -57,19 +57,15 @@ Return the heading node when yes otherwise nil."
         node
       nil)))
 
-(defun test ()
-  (interactive)
-  (message "%s" (treesit-node-text
-                 (treesit-node-child (treesit-parent-until
-                                      (treesit-node-at (point))
-                                      (lambda (x) (string= "item" (treesit-node-type x))))
-                                     0))))
-
 (defun typst-ts-mode-item--at-point-p ()
-  "Return (prev current next) items.
+  "Return (prev current next numbered-p) items.
 
-When there are no item nodes return for the specific list index will be nil.
-Being a different item type does not count as sibling either, ex:
+The last item in the last tells you if the list is numbered (t) or not (nil).
+
+When current does not have a previous or next sibling,
+the index for it will be nil.
+
+Being a different item type does not count as sibling, ex:
 1. foo
 - bar
 
@@ -95,7 +91,8 @@ When point is not on an item node return nil."
      ((not node) node)
      (node (list (funcall only-if (treesit-node-prev-sibling node))
                  node
-                 (funcall only-if (treesit-node-next-sibling node)))))))
+                 (funcall only-if (treesit-node-next-sibling node))
+                 node-numbered-p)))))
 
 (defun typst-ts-mode--swap-regions (start1 end1 start2 end2)
   "Swap region between START1 and END1 with region between START2 and END2."
@@ -127,25 +124,45 @@ When point is not on an item node return nil."
 (defun typst-ts-mode-item--move (direction)
   "Moves item node up or down (swap).
 DIRECTION should be `up' or `down'."
-  (let (previous current next swap-with)
-    (seq-setq (previous current next) (typst-ts-mode-item--at-point-p))
+  (let* ( previous current next swap-with numbered-p
+          (bind (lambda ()
+                  (pcase direction
+                    ('up
+                     (setq swap-with previous))
+                    ('down
+                     (setq swap-with next))
+                    (_ (error "%s is not one of: `up' `down'" direction))))))
+    (seq-setq (previous current next numbered-p)
+              (typst-ts-mode-item--at-point-p))
     (unless current
       (error "Point is not on an item"))
-    (pcase direction
-      ('up
-       (setq swap-with previous))
-      ('down
-       (setq swap-with next))
-      (_ (error "%s is not one of: `up' `down'" direction)))
+    (funcall bind)
     (unless swap-with
       (user-error "There is no %s item to swap with"
                   (if (eq direction 'up) "previous" "next")))
+    ;; numbers may need to be swapped
+    (when numbered-p
+      (let* ((number1 (treesit-node-child current 0))
+             (number2 (treesit-node-child swap-with 0))
+             (current-begin (treesit-node-start number1))
+             (current-end (treesit-node-end number1))
+             (other-begin (treesit-node-start number2))
+             (other-end (treesit-node-end number2)))
+        (save-excursion
+          (typst-ts-mode--swap-regions current-begin current-end
+                                       other-begin other-end))))
+    ;; the nodes must be reinitialized
+    (seq-setq (previous current next numbered-p)
+              (typst-ts-mode-item--at-point-p))
+    (funcall bind)
     (let ((current-begin (treesit-node-start current))
           (current-end (treesit-node-end current))
-          (other-begin (treesit-node-start previous))
-          (other-end (treesit-node-end previous)))
+          (other-begin (treesit-node-start swap-with))
+          (other-end (treesit-node-end swap-with))
+          (column (current-column)))
       (typst-ts-mode--swap-regions current-begin current-end
-                                   other-begin other-end))))
+                                   other-begin other-end)
+      (move-to-column column))))
 
 (defun typst-ts-mode-item-up ()
   "Move the item at point up."
