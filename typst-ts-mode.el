@@ -81,7 +81,7 @@ NOTE: currently only support Emacs 30 (master branch)."
     (modify-syntax-entry  ?\n    "> b"     st)
     st))
 
-(defvar typst-ts-mode-font-lock-rules
+(defvar typst-ts-mode-font-lock-settings
   (treesit-font-lock-rules
    :language 'typst
    :feature 'comment
@@ -597,7 +597,7 @@ typst tree sitter grammar (at least %s)!" (current-time-string min-time))
                          (?\$ . ?\$)))
 
   ;; Font Lock
-  (setq-local treesit-font-lock-settings typst-ts-mode-font-lock-rules)
+  (setq-local treesit-font-lock-settings typst-ts-mode-font-lock-settings)
   (setq-local treesit-font-lock-feature-list typst-ts-mode-font-lock-feature-list)
 
   ;; Indentation
