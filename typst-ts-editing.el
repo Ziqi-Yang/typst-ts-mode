@@ -189,7 +189,6 @@ DIRECTION should be `up' or `down'."
 (defun typst-ts-mode-meta-down ()
   "See `typst-ts-mode-meta--dwim'."
   (interactive)
-  (message "%s" (typst-ts-mode-meta--dwim 'down))
   (call-interactively (typst-ts-mode-meta--dwim 'down)))
 
 (defun typst-ts-mode-meta-left ()
