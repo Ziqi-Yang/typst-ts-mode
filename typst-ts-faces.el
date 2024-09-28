@@ -27,21 +27,14 @@
   :group 'typst-ts)
 
 (defcustom typst-ts-markup-header-same-height t
-  "Whether to make header face in markup context share the same height.
-Note it only works when user choose `max' level of fontification precision
-level.  See `typst-ts-mode-fontification-precision-level'."
+  "Whether to make header face in markup context share the same height."
   :type 'boolean
   :group 'typst-ts-faces)
 
 (defcustom typst-ts-markup-header-scale
   '(2.0 1.7 1.4 1.1 1.0 1.0)
   "Header Scale."
-  :type '(list integer integer integer integer integer integer)
-  :set (lambda (symbol value)
-         (set-default symbol value)
-         (when typst-ts-markup-header-same-height
-           (set-default symbol (make-list (length value) 1.0))))
-  :set-after '(typst-ts-markup-header-same-height)
+  :type '(list number number number number number number)
   :group 'typst-ts-faces)
 
 ;; Face =========================================================================
@@ -149,19 +142,9 @@ level.  See `typst-ts-mode-fontification-precision-level'."
   '((t :inherit bold))
   "Face for strong.")
 
-(defface typst-ts-markup-item-face
-  '((t :inherit shadow))
-  "Face for whole term, use in min and middle fontification level.
-See `typst-ts-mode-fontification-precision-level'.")
-
 (defface typst-ts-markup-item-indicator-face
   '((t :inherit shadow))
   "Face for item.")
-
-(defface typst-ts-markup-term-face
-  '((t :inherit shadow))
-  "Face for whole term, use in min and middle fontification level.
-See `typst-ts-mode-fontification-precision-level'.")
 
 (defface typst-ts-markup-term-indicator-face
   '((t :inherit shadow))
@@ -195,11 +178,6 @@ See `typst-ts-mode-fontification-precision-level'.")
   '((t :inherit shadow))
   "Face for rawblock and rawspan blob.")
 
-(defface typst-ts-markup-rawblock-face
-  '((t :inherit shadow))
-  "Face for whole raw block, use in min and middle fontification level.
-See `typst-ts-mode-fontification-precision-level'.")
-
 (defface typst-ts-markup-rawblock-indicator-face
   '((t :inherit typst-ts-markup-raw-indicator-face))
   "Face for rawblock indicator.")
@@ -211,11 +189,6 @@ See `typst-ts-mode-fontification-precision-level'.")
 (defface typst-ts-markup-rawblock-blob-face
   '((t :inherit typst-ts-markup-raw-blob-face))
   "Face for rawblock blob.")
-
-(defface typst-ts-markup-rawspan-face
-  '((t :inherit shadow))
-  "Face for whole raw span, use in min and middle fontification level.
-See `typst-ts-mode-fontification-precision-level'.")
 
 (defface typst-ts-markup-rawspan-indicator-face
   '((t :inherit typst-ts-markup-raw-indicator-face))
