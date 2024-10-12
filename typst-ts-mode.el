@@ -66,7 +66,7 @@ This variable is used in `typst-ts-mode-check-grammar-version'."
 
 (defcustom typst-ts-mode-enable-raw-blocks-highlight nil
   "Whether to enable raw block highlighting.
-NOTE: currently only support Emacs 30 (master branch)."
+NOTE this option must be set before the first loading(opening typst file)"
   :type 'boolean
   :group 'typst-ts)
 
