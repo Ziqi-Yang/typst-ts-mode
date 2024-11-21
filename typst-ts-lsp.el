@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'eglot)
-
 (defgroup typs-ts-lsp nil
   "Typst TS eglot integration with tinymist."
   :prefix "typst-ts-compile"
