@@ -116,12 +116,7 @@ buffer before compilation."
   "Compile & Preview.
 Assuming the compile output file name is in default style."
   (interactive)
-  ;; use a local variable version of `compilation-finish-functions' to shadow
-  ;; global version doesn't work
-  (add-hook 'compilation-finish-functions
-            (typst-ts-mode-compile-and-preview--compilation-finish-function
-             (current-buffer)))
-  (typst-ts-compile))
+  (typst-ts-compile t))
 
 (defvar typst-ts-compilation-mode-error
   (cons (rx bol "error:" (+ not-newline) "\n" (+ blank) "┌─ "
