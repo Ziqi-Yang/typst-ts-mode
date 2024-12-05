@@ -63,12 +63,12 @@ compilation buffer before compilation."
       (remove-hook 'compilation-finish-functions
                    (typst-ts-compile--compilation-finish-function cur-buffer)))))
 
-(defun typst-ts-compile (&optional arg)
+(defun typst-ts-compile (&optional preview)
   "Compile current typst file.
-When use a prefix argument, don't preview the document after compilation.
-ARG: prefix argument."
+When using a prefix argument or the optional argument PREVIEW,
+ preview the document after compilation."
   (interactive "P")
-  (unless arg
+  (when preview
     (add-hook 'compilation-finish-functions
               (typst-ts-mode-compile-and-preview--compilation-finish-function
                (current-buffer))))
