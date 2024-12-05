@@ -118,6 +118,12 @@ Assuming the compile output file name is in default style."
   (interactive)
   (typst-ts-compile t))
 
+;;;###autoload
+(defun typst-ts-preview ()
+  "Preview the current typst document output."
+  (browse-url (typst-ts-compile-get-result-pdf-filename #'current-buffer))
+  )
+
 (defvar typst-ts-compilation-mode-error
   (cons (rx bol "error:" (+ not-newline) "\n" (+ blank) "┌─ "
             (group (+ not-newline)) ":" ;; file
