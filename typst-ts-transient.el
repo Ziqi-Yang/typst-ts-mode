@@ -31,7 +31,7 @@
     ("c" "compile & preview" typst-ts-compile-and-preview)
     ("C" "compile" typst-ts-compile)
     ("w" "watch" typst-ts-watch-mode)
-    ("p" "preview" typst-ts-mode-preview)]
+    ("p" "preview" typst-ts-preview)]
 
    ["Export"
     ("em" "markdown" typst-ts-mc-export-to-markdown)]

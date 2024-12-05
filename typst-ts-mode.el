@@ -462,18 +462,10 @@ This function is meant to be used when user hits a return key."
 
 
 ;;;###autoload
-(defun typst-ts-mode-preview (file)
-  "Open the result compile file.
-FILE: file path for the result compile file."
-  (interactive (list (typst-ts-compile-get-result-pdf-filename)))
-  ;; don't use `browse-url-of-file', which cannot open non-english documents
-  (browse-url file))
-
-;;;###autoload
 (defvar-keymap typst-ts-mode-map
   "C-c C-c" #'typst-ts-compile  ; use prefix argument to do preview
   "C-c C-w" #'typst-ts-watch-mode
-  "C-c C-p" #'typst-ts-mode-preview
+  "C-c C-p" #'typst-ts-preview
 
   "M-<left>" #'typst-ts-mode-meta-left
   "M-<right>" #'typst-ts-mode-meta-right
