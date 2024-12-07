@@ -123,9 +123,7 @@ Assuming the compile output file name is in default style."
   "Preview the typst document output.
 If BUFFER is passed, preview its output, otherwise use current buffer."
   (interactive)
-  (unless buffer (setq buffer #'current-buffer))
-  (browse-url (typst-ts-compile-get-result-pdf-filename #'current-buffer))
-  )
+  (browse-url (typst-ts-compile-get-result-pdf-filename buffer)))
 
 (defvar typst-ts-compilation-mode-error
   (cons (rx bol "error:" (+ not-newline) "\n" (+ blank) "┌─ "
