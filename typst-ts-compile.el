@@ -63,12 +63,12 @@ compilation buffer before compilation."
       (remove-hook 'compilation-finish-functions
                    (typst-ts-compile--compilation-finish-function cur-buffer)))))
 
-(defun typst-ts-compile (&optional arg)
+(defun typst-ts-compile (&optional preview)
   "Compile current typst file.
-When use a prefix argument, don't preview the document after compilation.
-ARG: prefix argument."
+When using a prefix argument or the optional argument PREVIEW,
+ preview the document after compilation."
   (interactive "P")
-  (unless arg
+  (when preview
     (add-hook 'compilation-finish-functions
               (typst-ts-mode-compile-and-preview--compilation-finish-function
                (current-buffer))))
@@ -107,7 +107,7 @@ CUR-BUFFER: original typst buffer, in case user set
 buffer before compilation."
   (lambda (_b _msg)
     (unwind-protect
-        (browse-url (typst-ts-compile-get-result-pdf-filename cur-buffer))
+        (typst-ts-preview cur-buffer)
       (remove-hook 'compilation-finish-functions
                    (typst-ts-mode-compile-and-preview--compilation-finish-function cur-buffer)))))
 
@@ -116,12 +116,16 @@ buffer before compilation."
   "Compile & Preview.
 Assuming the compile output file name is in default style."
   (interactive)
-  ;; use a local variable version of `compilation-finish-functions' to shadow
-  ;; global version doesn't work
-  (add-hook 'compilation-finish-functions
-            (typst-ts-mode-compile-and-preview--compilation-finish-function
-             (current-buffer)))
-  (typst-ts-compile))
+  (typst-ts-compile t))
+
+;;;###autoload
+(defun typst-ts-preview (&optional buffer)
+  "Preview the typst document output.
+If BUFFER is passed, preview its output, otherwise use current buffer."
+  (interactive)
+  (unless buffer (setq buffer #'current-buffer))
+  (browse-url (typst-ts-compile-get-result-pdf-filename #'current-buffer))
+  )
 
 (defvar typst-ts-compilation-mode-error
   (cons (rx bol "error:" (+ not-newline) "\n" (+ blank) "┌─ "
