@@ -472,6 +472,14 @@ When there is no section it will insert a heading below point."
     (unless (eq execute-result 'success)
       (call-interactively (global-key-binding (kbd "TAB"))))))
 
+(defun typst-ts-mode-auto-fill-function ()
+  "Function for `auto-fill-mode'.
+
+Inserts newline and indents according to context."
+  (when (>= (current-column) (current-fill-column))
+    (insert "\n")
+    (typst-ts-mode-indent-line-function)))
+
 (provide 'typst-ts-editing)
 
 ;;; typst-ts-editing.el ends here
