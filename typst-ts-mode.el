@@ -464,7 +464,7 @@ This function is meant to be used when user hits a return key."
 ;;;###autoload
 (defvar-keymap typst-ts-mode-map
   "C-c C-c" #'typst-ts-compile  ; use prefix argument to do preview
-  "C-c C-C" #'typst-ts-compile-and-preview
+  "C-c C-S-C" #'typst-ts-compile-and-preview
   "C-c C-w" #'typst-ts-watch-mode
   "C-c C-p" #'typst-ts-preview
 
