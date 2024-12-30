@@ -62,6 +62,7 @@ Return the heading node when yes otherwise nil."
 Otherwise nil."
   (treesit-parent-until
    (treesit-node-at
+    ;; do not be at last column
     (if (and (eolp) (/= (current-column) 0))
         (1- (point))
       (point)))
