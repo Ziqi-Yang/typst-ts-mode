@@ -60,9 +60,13 @@ Return the heading node when yes otherwise nil."
 (defun typst-ts-mode-item--at-point-p ()
   "Return item node when point is on item.
 Otherwise nil."
-  (treesit-parent-until (treesit-node-at (point))
-                        (lambda (x) (string= (treesit-node-type x)
-                                             "item"))))
+  (treesit-parent-until
+   (treesit-node-at
+    (if (and (eolp) (/= (current-column) 0))
+        (1- (point))
+      (point)))
+   (lambda (x) (string= (treesit-node-type x)
+                        "item"))))
 
 (defun typst-ts-mode-item--with-siblings ()
   "Return (prev current next numbered-p) items.
