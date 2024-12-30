@@ -129,7 +129,7 @@ When point is not on an item node return nil."
     (set-marker marker2-end nil)))
 
 (defun typst-ts-mode-item--move (direction)
-  "Moves item node up or down (swap).
+  "Move item node up or down (swap).
 DIRECTION should be `up' or `down'."
   (let* ( previous current next swap-with numbered-p
           (bind (lambda ()
