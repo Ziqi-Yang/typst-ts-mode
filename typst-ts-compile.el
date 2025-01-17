@@ -118,12 +118,17 @@ Assuming the compile output file name is in default style."
   (interactive)
   (typst-ts-compile t))
 
+(defcustom typst-ts-mode-preview-function 'browse-url
+  "Function that opens PDF documents for preview."
+  :type 'function
+  :group 'typst-ts)
+
 ;;;###autoload
 (defun typst-ts-preview (&optional buffer)
   "Preview the typst document output.
 If BUFFER is passed, preview its output, otherwise use current buffer."
   (interactive)
-  (browse-url (typst-ts-compile-get-result-pdf-filename buffer)))
+  (funcall typst-ts-mode-preview-function (typst-ts-compile-get-result-pdf-filename buffer)))
 
 (defvar typst-ts-compilation-mode-error
   (cons (rx bol "error:" (+ not-newline) "\n" (+ blank) "┌─ "
